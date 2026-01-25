@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>🏠 ניהול הבית</title>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
 :root {
   --oshari: #10b981; --yuval: #8b5cf6; --hillel: #f59e0b; --lior: #06b6d4; --avi: #3b82f6; --ariela: #ec4899;
@@ -21,10 +23,18 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.5); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.8); } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .header { text-align: center; padding: 20px; color: white; animation: fadeInUp 0.6s ease; }
 .header h1 { font-size: 2rem; font-weight: 800; text-shadow: 2px 2px 10px rgba(0,0,0,0.3); margin-bottom: 8px; }
 .header .date { font-size: 1.1rem; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 30px; display: inline-block; }
+
+.sync-status { position: fixed; top: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; z-index: 200; display: flex; align-items: center; gap: 6px; }
+.sync-status.online { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+.sync-status.offline { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
+.sync-status.syncing { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.sync-status.syncing .sync-dot { animation: pulse 1s infinite; }
 
 .admin-badge { position: fixed; top: 10px; left: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 200; box-shadow: 0 4px 15px rgba(239,68,68,0.4); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .user-badge { position: fixed; top: 10px; left: 10px; background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 200; cursor: pointer; }
@@ -81,7 +91,6 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
 .nav-btn { background: none; border: none; color: #64748b; padding: 10px 14px; font-size: 0.65rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; transition: all 0.3s; font-family: inherit; position: relative; }
 .nav-btn svg { width: 22px; height: 22px; }
 .nav-btn.active { color: white; background: linear-gradient(135deg, #3b82f6, #8b5cf6); transform: scale(1.1); box-shadow: 0 4px 15px rgba(59,130,246,0.5); }
-.nav-btn .lock-icon-small { position: absolute; top: 2px; right: 2px; font-size: 0.6rem; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
@@ -125,12 +134,11 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
 .task-badge { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
 .task-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5; transition: all 0.3s; }
 .task-delete:hover { opacity: 1; }
-.task-delete:disabled { opacity: 0.2; cursor: not-allowed; }
 
 .empty { text-align: center; padding: 40px 20px; color: #94a3b8; }
 .empty .emoji { font-size: 4rem; display: block; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite; }
 
-.view-only-notice { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #92400e; }
+.view-only-notice { background: linear-gradient(135deg, #e0f2fe, #bae6fd); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #0369a1; }
 
 .hidden { display: none !important; }
 
@@ -149,11 +157,26 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 8px; }
 .tab { padding: 10px 20px; border: none; border-radius: 12px; background: rgba(255,255,255,0.3); color: white; font-family: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.3s; }
 .tab.active { background: white; color: #667eea; }
+
+.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
+.loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-text { color: white; margin-top: 20px; font-size: 1.2rem; }
 </style>
 </head>
 <body>
 
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">🔄 מתחבר...</div>
+</div>
+
 <div class="app" id="app"></div>
+
+<div class="sync-status online" id="sync-status">
+  <span class="sync-dot"></span>
+  <span id="sync-text">מחובר</span>
+</div>
+
 <div id="role-badge"></div>
 
 <nav class="nav">
@@ -185,10 +208,10 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
     <div class="lock-title">אזור מנהל מערכת</div>
     <div class="lock-subtitle">הזן קוד גישה (4 ספרות)</div>
     <div class="pin-input">
-      <input type="password" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)">
-      <input type="password" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)">
-      <input type="password" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)">
-      <input type="password" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)">
+      <input type="tel" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)">
+      <input type="tel" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)">
+      <input type="tel" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)">
+      <input type="tel" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)">
     </div>
     <div class="pin-error" id="pin-error">❌ קוד שגוי</div>
     <button class="btn" style="background:#e2e8f0;color:#475569;width:100%" onclick="closeLock()">ביטול</button>
@@ -206,6 +229,22 @@ body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100v
 </div>
 
 <script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",
+  authDomain: "family-app-25459.firebaseapp.com",
+  databaseURL: "https://family-app-25459-default-rtdb.firebaseio.com",
+  projectId: "family-app-25459",
+  storageBucket: "family-app-25459.firebasestorage.app",
+  messagingSenderId: "272616434592",
+  appId: "1:272616434592:web:af16fb017795eca5a6d2c5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const dataRef = db.ref('familyData');
+
+// ==================== CONFIG ====================
 const ADMIN_PIN = '1234';
 
 const FAMILY = [
@@ -218,53 +257,44 @@ const FAMILY = [
 ];
 
 const KIDS = FAMILY.filter(m => m.type === 'child');
-const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
+const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
 
-// מערכות שעות מעודכנות - החלפה בין אושרי להלל + חוגים
-const DEFAULT_SCH = {
-  avi: {0:[],1:[],2:[],3:[],4:[],5:[]},
-  ariela: {0:[],1:[],2:[],3:[],4:[],5:[]},
-  // אושרי - המערכת שהייתה של הלל + חוגים
-  oshari: {
-    0:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'כישורי חיים'},{t:'12:00',s:'חנ״ג'},{t:'13:00',s:'מתמטיקה'},{t:'17:00',s:'⚽ כדורגל'}],
-    1:[{t:'08:00',s:'שפה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'גיאומטריה'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏃 הישרדות'}],
-    2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'ספריה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'עולם מופלא'}],
-    3:[{t:'08:00',s:'גיאומטריה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'אומנות'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'אומנות'},{t:'17:00',s:'⚽ כדורגל'}],
-    4:[{t:'08:00',s:'שפה'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'חנ״ג'},{t:'12:00',s:'תנ״ך'},{t:'17:00',s:'⚽ כדורגל'},{t:'18:00',s:'🏃 הישרדות'}],
-    5:[{t:'08:00',s:'מולדת'},{t:'09:00',s:'מולדת'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מדעים'}]
+const DEFAULT_DATA = {
+  schedules: {
+    avi: {0:[],1:[],2:[],3:[],4:[],5:[]},
+    ariela: {0:[],1:[],2:[],3:[],4:[],5:[]},
+    oshari: {
+      0:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'כישורי חיים'},{t:'12:00',s:'חנ״ג'},{t:'13:00',s:'מתמטיקה'},{t:'17:00',s:'⚽ כדורגל'}],
+      1:[{t:'08:00',s:'שפה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'גיאומטריה'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏃 הישרדות'}],
+      2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'ספריה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'עולם מופלא'}],
+      3:[{t:'08:00',s:'גיאומטריה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'אומנות'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'אומנות'},{t:'17:00',s:'⚽ כדורגל'}],
+      4:[{t:'08:00',s:'שפה'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'חנ״ג'},{t:'12:00',s:'תנ״ך'},{t:'17:00',s:'⚽ כדורגל'},{t:'18:00',s:'🏃 הישרדות'}],
+      5:[{t:'08:00',s:'מולדת'},{t:'09:00',s:'מולדת'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מדעים'}]
+    },
+    yuval: {
+      0:[{t:'08:00',s:'כישורי חיים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'אנגלית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
+      1:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'תנ״ך'},{t:'12:00',s:'שפה'}],
+      2:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'חנ״ג'},{t:'11:00',s:'ערבית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
+      3:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'אומנות'},{t:'10:00',s:'קרן קרב'},{t:'11:00',s:'קרן קרב'},{t:'12:00',s:'היסטוריה'}],
+      4:[{t:'08:00',s:'היסטוריה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'מתמטיקה'}],
+      5:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מפתח הלב'},{t:'12:00',s:'🏀 כדורסל'}]
+    },
+    hillel: {
+      0:[{t:'08:00',s:'חינוך'},{t:'09:00',s:'ספורט'},{t:'10:00',s:'שלח'},{t:'11:00',s:'שלח'},{t:'12:00',s:'מדעים'},{t:'13:00',s:'אנגלית'}],
+      1:[{t:'08:00',s:'חשיבה'},{t:'09:00',s:'תנ״ך'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'},{t:'12:00',s:'מתמטיקה'},{t:'17:00',s:'🎾 טניס'}],
+      2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'ספורט'},{t:'11:00',s:'מדעים'},{t:'12:00',s:'מדעים'}],
+      3:[{t:'08:00',s:'גיאוגרפיה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'אנגלית'},{t:'11:00',s:'היסטוריה'},{t:'12:00',s:'חינוך'}],
+      4:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'תקשורת'},{t:'17:00',s:'🎾 טניס'}],
+      5:[{t:'08:00',s:'ערבית'},{t:'09:00',s:'ערבית'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'}]
+    },
+    lior: {0:[],1:[],2:[],3:[],4:[],5:[]}
   },
-  // יובל - כדורסל בימי א, ג, ו
-  yuval: {
-    0:[{t:'08:00',s:'כישורי חיים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'אנגלית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
-    1:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'תנ״ך'},{t:'12:00',s:'שפה'}],
-    2:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'חנ״ג'},{t:'11:00',s:'ערבית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
-    3:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'אומנות'},{t:'10:00',s:'קרן קרב'},{t:'11:00',s:'קרן קרב'},{t:'12:00',s:'היסטוריה'}],
-    4:[{t:'08:00',s:'היסטוריה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'מתמטיקה'}],
-    5:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מפתח הלב'},{t:'12:00',s:'🏀 כדורסל'}]
-  },
-  // הלל - המערכת שהייתה של אושרי + טניס בימי ב, ה
-  hillel: {
-    0:[{t:'08:00',s:'חינוך'},{t:'09:00',s:'ספורט'},{t:'10:00',s:'שלח'},{t:'11:00',s:'שלח'},{t:'12:00',s:'מדעים'},{t:'13:00',s:'אנגלית'}],
-    1:[{t:'08:00',s:'חשיבה'},{t:'09:00',s:'תנ״ך'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'},{t:'12:00',s:'מתמטיקה'},{t:'17:00',s:'🎾 טניס'}],
-    2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'ספורט'},{t:'11:00',s:'מדעים'},{t:'12:00',s:'מדעים'}],
-    3:[{t:'08:00',s:'גיאוגרפיה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'אנגלית'},{t:'11:00',s:'היסטוריה'},{t:'12:00',s:'חינוך'}],
-    4:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'תקשורת'},{t:'17:00',s:'🎾 טניס'}],
-    5:[{t:'08:00',s:'ערבית'},{t:'09:00',s:'ערבית'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'}]
-  },
-  lior: {0:[],1:[],2:[],3:[],4:[],5:[]}
-};
-
-// מטלות ברירת מחדל
-const DEFAULT_TASKS = [
-  {id:1, kid:'yuval', text:'פיזור כביסה', freq:'יומי', done:false},
-  {id:2, kid:'oshari', text:'פיזור מדיח', freq:'יומי', done:false},
-  {id:3, kid:'hillel', text:'קיפול כביסה', freq:'יומי', done:false}
-];
-
-let data = {
-  schedules: JSON.parse(JSON.stringify(DEFAULT_SCH)),
-  tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+  tasks: [
+    {id:1, kid:'yuval', text:'פיזור כביסה', freq:'יומי', done:false},
+    {id:2, kid:'oshari', text:'פיזור מדיח', freq:'יומי', done:false},
+    {id:3, kid:'hillel', text:'קיפול כביסה', freq:'יומי', done:false}
+  ],
   exams: [],
   events: [],
   rewards: [],
@@ -272,6 +302,7 @@ let data = {
   history: {oshari:[], yuval:[], hillel:[], lior:[]}
 };
 
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let currentView = 'home';
 let currentMember = null;
 let currentKidPage = null;
@@ -280,27 +311,60 @@ let selectedDay = new Date().getDay();
 if(selectedDay === 6) selectedDay = 0;
 let isAdmin = false;
 let pendingAdminView = null;
+let isOnline = true;
 
-function load() {
-  try {
-    const s = localStorage.getItem('familyAppV5');
-    if(s) {
-      const loaded = JSON.parse(s);
-      data = {...data, ...loaded};
-    }
-  } catch(e) {}
+// ==================== FIREBASE SYNC ====================
+function updateSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  const text = document.getElementById('sync-text');
+  el.className = 'sync-status ' + status;
+  if(status === 'online') text.textContent = 'מסונכרן ✓';
+  else if(status === 'offline') text.textContent = 'לא מחובר';
+  else if(status === 'syncing') text.textContent = 'מסנכרן...';
 }
 
-function save() {
-  try {
-    localStorage.setItem('familyAppV5', JSON.stringify(data));
-  } catch(e) {}
+function saveToFirebase() {
+  updateSyncStatus('syncing');
+  dataRef.set(data).then(() => {
+    updateSyncStatus('online');
+  }).catch((err) => {
+    console.error('Save error:', err);
+    updateSyncStatus('offline');
+  });
 }
 
-function requiresAdmin(view) {
-  return false; // כולם יכולים לצפות בכל המסכים
-}
+// Listen for realtime updates
+dataRef.on('value', (snapshot) => {
+  const val = snapshot.val();
+  if(val) {
+    data = val;
+    // Ensure all required fields exist
+    if(!data.tasks) data.tasks = [];
+    if(!data.exams) data.exams = [];
+    if(!data.events) data.events = [];
+    if(!data.rewards) data.rewards = [];
+    if(!data.money) data.money = {oshari:0, yuval:0, hillel:0, lior:0};
+    if(!data.history) data.history = {oshari:[], yuval:[], hillel:[], lior:[]};
+    render();
+  }
+  document.getElementById('loading').classList.add('hidden');
+  updateSyncStatus('online');
+});
 
+// Handle connection state
+db.ref('.info/connected').on('value', (snap) => {
+  isOnline = snap.val() === true;
+  updateSyncStatus(isOnline ? 'online' : 'offline');
+});
+
+// Initialize with default data if empty
+dataRef.once('value').then((snapshot) => {
+  if(!snapshot.val()) {
+    dataRef.set(DEFAULT_DATA);
+  }
+});
+
+// ==================== UI FUNCTIONS ====================
 function showView(view) {
   currentView = view;
   currentMember = null;
@@ -336,12 +400,7 @@ function handlePin(digit) {
       isAdmin = true;
       closeLock();
       updateRoleBadge();
-      if(pendingAdminView) {
-        showView(pendingAdminView);
-        pendingAdminView = null;
-      } else {
-        render(); // רענן את המסך כדי להציג כפתורי מנהל
-      }
+      render();
     } else {
       document.getElementById('pin-error').classList.add('show');
       document.querySelectorAll('.pin-digit').forEach(el => el.classList.add('error'));
@@ -431,7 +490,7 @@ function renderHome(today, todayDay) {
     <div class="card">
       <div class="card-title"><span class="emoji">⭐</span> השבוע הקרוב</div>
       ${weekEvents.length === 0 ? '<div class="empty"><span class="emoji">📭</span>אין אירועים השבוע</div>' : `
-        <div class="events-week">${weekEvents.map(e => renderEventItem(e)).join('')}</div>
+        <div class="events-week">${weekEvents.map(e => renderEventItem(e, e.originalIdx, e.eventType)).join('')}</div>
       `}
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-small" onclick="openModal('event')">➕ אירוע</button>
@@ -444,15 +503,14 @@ function renderHome(today, todayDay) {
 function selectDay(day) { selectedDay = day; render(); }
 
 function renderFullDaySchedule(day) {
-  if(day === 6) return '<div class="empty"><span class="emoji">🕯️</span>שבת שלום!</div>';
-  const times = TIMES;
+  if(day === 6) return '<div class="empty"><span class="emoji">🕯️</span>שבת שלום!<br><small style="color:#64748b">אין פעילויות מתוכננות</small></div>';
   let html = `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 45px repeat(${FAMILY.length}, 1fr)">`;
   html += `<div class="schedule-header">⏰</div>`;
   FAMILY.forEach(m => { html += `<div class="schedule-header" style="background:${m.color}">${m.icon}</div>`; });
-  times.forEach(time => {
+  TIMES.forEach(time => {
     html += `<div class="schedule-time">${time}</div>`;
     FAMILY.forEach(m => {
-      const sch = data.schedules[m.id]?.[day] || [];
+      const sch = data.schedules?.[m.id]?.[day] || [];
       const lesson = sch.find(l => l.t === time);
       const bg = lesson?.s ? m.color + '20' : 'white';
       html += `<div class="schedule-cell ${lesson?.s?'has-lesson':''}" style="background:${bg}" onclick="editLesson('${m.id}',${day},'${time}')">${lesson?.s || ''}</div>`;
@@ -475,7 +533,7 @@ function setKidTab(tab) {
 
 function renderKidPage(kidId) {
   const k = FAMILY.find(x => x.id === kidId);
-  const kidTasks = data.tasks.filter(t => t.kid === kidId);
+  const kidTasks = (data.tasks || []).filter(t => t.kid === kidId);
   
   return `
     <div class="header">
@@ -490,7 +548,7 @@ function renderKidPage(kidId) {
       </div>
       <div style="margin-right:auto;text-align:center">
         <div style="font-size:0.8rem;color:#64748b">חיסכון</div>
-        <div style="font-size:1.5rem;font-weight:800;color:${k.color}">₪${data.money[kidId] || 0}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:${k.color}">₪${data.money?.[kidId] || 0}</div>
       </div>
     </div>
     
@@ -507,7 +565,7 @@ function renderKidPage(kidId) {
 }
 
 function renderKidSchedule(kidId, k) {
-  const sch = data.schedules[kidId] || {};
+  const sch = data.schedules?.[kidId] || {};
   let html = `<div class="card"><div class="card-title"><span class="emoji">📅</span> מערכת שעות</div>`;
   html += `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 50px repeat(6, 1fr)">`;
   html += `<div class="schedule-header">⏰</div>`;
@@ -533,7 +591,7 @@ function renderKidTasks(kidId, k, kidTasks) {
           const idx = data.tasks.indexOf(t);
           return `
             <div class="task-item" style="border-right:4px solid ${k.color}">
-              <div class="task-check ${t.done?'done':''}" style="border-color:${k.color}" onclick="viewToggleTask(${idx})">${t.done?'✓':''}</div>
+              <div class="task-check ${t.done?'done':''}" style="border-color:${k.color}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div>
               <div class="task-text ${t.done?'done':''}">${t.text}</div>
               <span class="task-badge" style="background:${k.color}20;color:${k.color}">${t.freq}</span>
             </div>
@@ -544,16 +602,9 @@ function renderKidTasks(kidId, k, kidTasks) {
   `;
 }
 
-function viewToggleTask(idx) {
-  // כולם יכולים לסמן מטלות כבוצעו (אבל לא למחוק/להוסיף)
-  data.tasks[idx].done = !data.tasks[idx].done;
-  save();
-  render();
-}
-
 function renderKidRewards(kidId, k) {
-  const kidRewards = data.rewards.filter(r => r.kid === kidId && r.type === 'reward');
-  const kidPunish = data.rewards.filter(r => r.kid === kidId && r.type === 'punish' && r.active);
+  const kidRewards = (data.rewards || []).filter(r => r.kid === kidId && r.type === 'reward');
+  const kidPunish = (data.rewards || []).filter(r => r.kid === kidId && r.type === 'punish' && r.active);
   
   return `
     <div class="card">
@@ -585,20 +636,20 @@ function getWeekEvents() {
   const today = new Date(); today.setHours(0,0,0,0);
   const endOfWeek = new Date(today); endOfWeek.setDate(today.getDate() + 7);
   const events = [];
-  data.exams.forEach(e => {
+  (data.exams || []).forEach((e, idx) => {
     const d = new Date(e.date);
-    if(d >= today && d <= endOfWeek) events.push({...e, type:'exam', daysLeft: Math.ceil((d - today) / 86400000), icon:'📝', dateObj: d});
+    if(d >= today && d <= endOfWeek) events.push({...e, originalIdx: idx, eventType:'exam', daysLeft: Math.ceil((d - today) / 86400000), icon:'📝', dateObj: d});
   });
-  data.events.forEach(e => {
+  (data.events || []).forEach((e, idx) => {
     const d = new Date(e.date);
-    if(d >= today && d <= endOfWeek) events.push({...e, daysLeft: Math.ceil((d - today) / 86400000), dateObj: d});
+    if(d >= today && d <= endOfWeek) events.push({...e, originalIdx: idx, eventType:'event', daysLeft: Math.ceil((d - today) / 86400000), dateObj: d});
   });
   return events.sort((a,b) => a.dateObj - b.dateObj);
 }
 
-function renderEventItem(e) {
+function renderEventItem(e, idx, type) {
   const m = FAMILY.find(x => x.id === e.kid);
-  const typeClass = e.type === 'exam' ? 'exam' : 'hobby';
+  const typeClass = type === 'exam' ? 'exam' : 'hobby';
   const daysText = e.daysLeft === 0 ? '🔥 היום!' : e.daysLeft === 1 ? '⏰ מחר' : `בעוד ${e.daysLeft} ימים`;
   return `
     <div class="event-item ${typeClass}">
@@ -611,6 +662,7 @@ function renderEventItem(e) {
         </div>
       </div>
       <div class="event-days">${daysText}</div>
+      <button class="task-delete" onclick="deleteEvent('${type}',${idx})" style="margin-right:8px">🗑️</button>
     </div>
   `;
 }
@@ -642,7 +694,7 @@ function showMemberSchedule(memberId) {
 
 function renderMemberFullSchedule(memberId) {
   const m = FAMILY.find(x => x.id === memberId);
-  const sch = data.schedules[memberId] || {};
+  const sch = data.schedules?.[memberId] || {};
   let html = `<div class="card" style="border-top: 4px solid ${m.color}">
     <div class="card-title"><span class="emoji">${m.icon}</span> ${m.name}</div>
     <p style="color:#64748b;margin-bottom:16px;font-size:0.85rem">💡 לחץ על תא לעריכה</p>
@@ -663,7 +715,7 @@ function renderMemberFullSchedule(memberId) {
 
 function editLesson(memberId, day, time) {
   const m = FAMILY.find(x => x.id === memberId);
-  const sch = data.schedules[memberId]?.[day] || [];
+  const sch = data.schedules?.[memberId]?.[day] || [];
   const current = sch.find(l => l.t === time)?.s || '';
   document.getElementById('modal-header').className = 'modal-header';
   document.getElementById('modal-title').textContent = `${DAYS[day]} ${time}`;
@@ -694,6 +746,7 @@ function editLesson(memberId, day, time) {
 
 function saveLesson(memberId, day, time) {
   const val = document.getElementById('inp-lesson').value.trim();
+  if(!data.schedules) data.schedules = {};
   if(!data.schedules[memberId]) data.schedules[memberId] = {};
   if(!data.schedules[memberId][day]) data.schedules[memberId][day] = [];
   const idx = data.schedules[memberId][day].findIndex(l => l.t === time);
@@ -701,14 +754,17 @@ function saveLesson(memberId, day, time) {
     if(idx >= 0) data.schedules[memberId][day][idx].s = val;
     else { data.schedules[memberId][day].push({t: time, s: val}); data.schedules[memberId][day].sort((a,b) => a.t.localeCompare(b.t)); }
   } else if(idx >= 0) data.schedules[memberId][day].splice(idx, 1);
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
 function deleteLesson(memberId, day, time) {
-  if(!data.schedules[memberId]?.[day]) return;
+  if(!data.schedules?.[memberId]?.[day]) return;
   const idx = data.schedules[memberId][day].findIndex(l => l.t === time);
-  if(idx >= 0) { data.schedules[memberId][day].splice(idx, 1); save(); }
-  closeModal(); render();
+  if(idx >= 0) { data.schedules[memberId][day].splice(idx, 1); saveToFirebase(); }
+  closeModal();
+  render();
 }
 
 function renderTasksPage() {
@@ -718,10 +774,10 @@ function renderTasksPage() {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div class="card-title" style="margin:0"><span class="emoji">📋</span> כל המטלות</div>
-        ${isAdmin ? '<button class="btn btn-primary btn-small" onclick="openModal(\'task\')">➕ הוסף</button>' : ''}
+        ${isAdmin ? `<button class="btn btn-primary btn-small" onclick="openModal('task')">➕ הוסף</button>` : ''}
       </div>
-      ${data.tasks.length === 0 ? '<div class="empty"><span class="emoji">🎉</span>אין מטלות!</div>' : `
-        ${data.tasks.map((t,i) => {
+      ${(data.tasks||[]).length === 0 ? '<div class="empty"><span class="emoji">🎉</span>אין מטלות!</div>' : `
+        ${(data.tasks||[]).map((t,i) => {
           const m = FAMILY.find(x => x.id === t.kid);
           return `
             <div class="task-item" style="border-right:4px solid ${m?.color || '#ccc'}">
@@ -737,21 +793,37 @@ function renderTasksPage() {
   `;
 }
 
+function toggleTask(i) {
+  if(!data.tasks) return;
+  data.tasks[i].done = !data.tasks[i].done;
+  saveToFirebase();
+  render();
+}
+
+function deleteTask(i) {
+  if(!isAdmin) return;
+  if(confirm('למחוק?')) {
+    data.tasks.splice(i,1);
+    saveToFirebase();
+    render();
+  }
+}
+
 function renderSavingsPage() {
   return `
     <div class="header"><h1>💰 חסכונות</h1></div>
-    <div class="view-only-notice" style="display:${isAdmin?'none':'flex'}"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>
+    ${!isAdmin ? '<div class="view-only-notice"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>' : ''}
     ${KIDS.map(k => `
       <div class="savings-card" style="background:linear-gradient(135deg, ${k.color}30, ${k.color}10)">
         <div class="savings-icon">${k.icon}</div>
         <div class="savings-info"><div class="savings-name">${k.name}</div><div class="savings-grade">${k.grade === 'גן' ? 'גן חובה' : 'כיתה ' + k.grade}</div></div>
-        <div class="savings-amount" style="color:${k.color}">₪${data.money[k.id] || 0}</div>
+        <div class="savings-amount" style="color:${k.color}">₪${data.money?.[k.id] || 0}</div>
         <div class="savings-actions">
           <button class="savings-btn add" onclick="addMoney('${k.id}')" ${!isAdmin?'disabled':''}>+</button>
           <button class="savings-btn sub" onclick="subMoney('${k.id}')" ${!isAdmin?'disabled':''}>-</button>
         </div>
       </div>
-      ${data.history[k.id]?.length > 0 ? `<div style="margin:-10px 0 16px 0;padding:0 16px">${data.history[k.id].slice(-3).reverse().map(h => `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.5);border-radius:8px;margin-top:4px;font-size:0.85rem"><span>${h.note}</span><span style="color:${h.amount>0?'#10b981':'#ef4444'};font-weight:600">${h.amount>0?'+':''}₪${h.amount}</span></div>`).join('')}</div>` : ''}
+      ${(data.history?.[k.id]||[]).length > 0 ? `<div style="margin:-10px 0 16px 0;padding:0 16px">${(data.history[k.id]||[]).slice(-3).reverse().map(h => `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.5);border-radius:8px;margin-top:4px;font-size:0.85rem"><span>${h.note}</span><span style="color:${h.amount>0?'#10b981':'#ef4444'};font-weight:600">${h.amount>0?'+':''}₪${h.amount}</span></div>`).join('')}</div>` : ''}
     `).join('')}
   `;
 }
@@ -762,7 +834,7 @@ function addMoney(kidId) {
   document.getElementById('modal-header').className = 'modal-header admin';
   document.getElementById('modal-title').textContent = `💰 הפקדה - ${k.name}`;
   document.getElementById('modal-body').innerHTML = `
-    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money[kidId] || 0}</div></div>
+    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money?.[kidId] || 0}</div></div>
     <div class="form-group"><label>סכום</label><input id="inp-amount" type="number" placeholder="50"></div>
     <div class="form-group"><label>הערה</label><input id="inp-note" placeholder="דמי כיס..."></div>
     <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-success" onclick="saveMoney('${kidId}',1)">💵 הפקד</button></div>
@@ -776,7 +848,7 @@ function subMoney(kidId) {
   document.getElementById('modal-header').className = 'modal-header admin';
   document.getElementById('modal-title').textContent = `💸 משיכה - ${k.name}`;
   document.getElementById('modal-body').innerHTML = `
-    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money[kidId] || 0}</div></div>
+    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money?.[kidId] || 0}</div></div>
     <div class="form-group"><label>סכום</label><input id="inp-amount" type="number" placeholder="20"></div>
     <div class="form-group"><label>סיבה</label><input id="inp-note" placeholder="קניתי..."></div>
     <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-danger" onclick="saveMoney('${kidId}',-1)">💸 משיכה</button></div>
@@ -789,35 +861,39 @@ function saveMoney(kidId, dir) {
   const amount = parseInt(document.getElementById('inp-amount').value) || 0;
   const note = document.getElementById('inp-note').value || (dir > 0 ? 'הפקדה' : 'משיכה');
   if(amount <= 0) return alert('נא להזין סכום');
+  if(!data.money) data.money = {};
+  if(!data.history) data.history = {};
   data.money[kidId] = (data.money[kidId] || 0) + (amount * dir);
   if(!data.history[kidId]) data.history[kidId] = [];
   data.history[kidId].push({amount: amount * dir, note, date: new Date().toISOString()});
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
 function renderRewardsPage() {
   return `
     <div class="header"><h1>⭐ כוכבים ובונוסים</h1></div>
-    <div class="view-only-notice" style="display:${isAdmin?'none':'flex'}"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>
+    ${!isAdmin ? '<div class="view-only-notice"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>' : ''}
     <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
       <button class="btn btn-success" onclick="openModal('reward')" ${!isAdmin?'disabled':''}>🎁 בונוס</button>
       <button class="btn btn-danger" onclick="openModal('punish')" ${!isAdmin?'disabled':''}>⚠️ עונש</button>
     </div>
     <div class="card">
       <div class="card-title"><span class="emoji">🎁</span> בונוסים</div>
-      ${data.rewards.filter(r=>r.type==='reward').length === 0 ? '<div class="empty"><span class="emoji">🌟</span>אין בונוסים</div>' : `
-        ${data.rewards.filter(r=>r.type==='reward').map((r,i) => {
-          const m = FAMILY.find(x => x.id === r.kid); const idx = data.rewards.indexOf(r);
-          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#d1fae520,#a7f3d020)"><span style="font-size:1.5rem">${m?.icon||'🎁'}</span><div class="task-text">${r.reason}<br><small style="color:#10b981;font-weight:600">${r.val}</small></div><button class="task-delete" onclick="deleteReward(${idx})" ${!isAdmin?'disabled':''}>🗑️</button></div>`;
+      ${(data.rewards||[]).filter(r=>r.type==='reward').length === 0 ? '<div class="empty"><span class="emoji">🌟</span>אין בונוסים</div>' : `
+        ${(data.rewards||[]).filter(r=>r.type==='reward').map((r,i) => {
+          const m = FAMILY.find(x => x.id === r.kid); const idx = (data.rewards||[]).indexOf(r);
+          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#d1fae520,#a7f3d020)"><span style="font-size:1.5rem">${m?.icon||'🎁'}</span><div class="task-text">${r.reason}<br><small style="color:#10b981;font-weight:600">${r.val}</small></div>${isAdmin?`<button class="task-delete" onclick="deleteReward(${idx})">🗑️</button>`:''}</div>`;
         }).join('')}
       `}
     </div>
     <div class="card">
       <div class="card-title"><span class="emoji">⚠️</span> עונשים</div>
-      ${data.rewards.filter(r=>r.type==='punish').length === 0 ? '<div class="empty"><span class="emoji">😇</span>אין עונשים!</div>' : `
-        ${data.rewards.filter(r=>r.type==='punish').map((r,i) => {
-          const m = FAMILY.find(x => x.id === r.kid); const idx = data.rewards.indexOf(r);
-          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#fee2e220,#fecaca20);opacity:${r.active?1:0.5}"><span style="font-size:1.5rem">${m?.icon||'⚠️'}</span><div class="task-text">${r.reason}<br><small style="color:#ef4444;font-weight:600">${r.val}</small></div><button class="task-badge" style="cursor:pointer;border:none;background:${r.active?'#fee2e2':'#dcfce7'};color:${r.active?'#ef4444':'#10b981'}" onclick="togglePunish(${idx})" ${!isAdmin?'disabled':''}>${r.active?'פעיל':'הסתיים'}</button><button class="task-delete" onclick="deleteReward(${idx})" ${!isAdmin?'disabled':''}>🗑️</button></div>`;
+      ${(data.rewards||[]).filter(r=>r.type==='punish').length === 0 ? '<div class="empty"><span class="emoji">😇</span>אין עונשים!</div>' : `
+        ${(data.rewards||[]).filter(r=>r.type==='punish').map((r,i) => {
+          const m = FAMILY.find(x => x.id === r.kid); const idx = (data.rewards||[]).indexOf(r);
+          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#fee2e220,#fecaca20);opacity:${r.active?1:0.5}"><span style="font-size:1.5rem">${m?.icon||'⚠️'}</span><div class="task-text">${r.reason}<br><small style="color:#ef4444;font-weight:600">${r.val}</small></div>${isAdmin?`<button class="task-badge" style="cursor:pointer;border:none;background:${r.active?'#fee2e2':'#dcfce7'};color:${r.active?'#ef4444':'#10b981'}" onclick="togglePunish(${idx})">${r.active?'פעיל':'הסתיים'}</button><button class="task-delete" onclick="deleteReward(${idx})">🗑️</button>`:''}</div>`;
         }).join('')}
       `}
     </div>
@@ -876,20 +952,23 @@ function addTask() {
   const text = document.getElementById('inp-text').value;
   const freq = document.getElementById('inp-freq').value;
   if(!text) return alert('נא להזין מטלה');
+  if(!data.tasks) data.tasks = [];
   data.tasks.push({id: Date.now(), kid, text, freq, done:false});
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
-
-function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; save(); render(); }
-function deleteTask(i) { if(!isAdmin) return; if(confirm('למחוק?')) { data.tasks.splice(i,1); save(); render(); } }
 
 function addExam() {
   const kid = document.getElementById('inp-kid').value;
   const subj = document.getElementById('inp-subj').value;
   const date = document.getElementById('inp-date').value;
   if(!subj || !date) return alert('נא למלא הכל');
+  if(!data.exams) data.exams = [];
   data.exams.push({kid, subj, date, icon:'📝', type:'exam'});
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
 function addEvent() {
@@ -899,8 +978,11 @@ function addEvent() {
   const date = document.getElementById('inp-date').value;
   if(!title || !date) return alert('נא למלא הכל');
   const icons = {חוג:'🎨', טיול:'🚗', חגיגה:'🎉', אחר:'📌'};
+  if(!data.events) data.events = [];
   data.events.push({kid, eventType, title, date, icon: icons[eventType]});
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
 function addReward() {
@@ -909,14 +991,19 @@ function addReward() {
   const val = document.getElementById('inp-val').value;
   const reason = document.getElementById('inp-reason').value;
   if(!val || !reason) return alert('נא למלא הכל');
+  if(!data.rewards) data.rewards = [];
   data.rewards.push({kid, val, reason, type:'reward'});
   if(document.getElementById('inp-rtype').value === 'כסף') {
     const amt = parseInt(val) || 0;
+    if(!data.money) data.money = {};
+    if(!data.history) data.history = {};
     data.money[kid] = (data.money[kid]||0) + amt;
     if(!data.history[kid]) data.history[kid] = [];
     data.history[kid].push({amount:amt, note:'בונוס: '+reason, date:new Date().toISOString()});
   }
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
 function addPunish() {
@@ -925,22 +1012,51 @@ function addPunish() {
   const val = document.getElementById('inp-val').value;
   const reason = document.getElementById('inp-reason').value;
   if(!val || !reason) return alert('נא למלא הכל');
+  if(!data.rewards) data.rewards = [];
   data.rewards.push({kid, val, reason, type:'punish', active:true});
   if(document.getElementById('inp-ptype').value === 'קנס') {
     const amt = parseInt(val) || 0;
+    if(!data.money) data.money = {};
+    if(!data.history) data.history = {};
     data.money[kid] = (data.money[kid]||0) - amt;
     if(!data.history[kid]) data.history[kid] = [];
     data.history[kid].push({amount:-amt, note:'קנס: '+reason, date:new Date().toISOString()});
   }
-  save(); closeModal(); render();
+  saveToFirebase();
+  closeModal();
+  render();
 }
 
-function deleteReward(i) { if(!isAdmin) return; if(confirm('למחוק?')) { data.rewards.splice(i,1); save(); render(); } }
-function togglePunish(i) { if(!isAdmin) return; data.rewards[i].active = !data.rewards[i].active; save(); render(); }
+function deleteReward(i) {
+  if(!isAdmin) return;
+  if(confirm('למחוק?')) {
+    data.rewards.splice(i,1);
+    saveToFirebase();
+    render();
+  }
+}
 
-load();
+function deleteEvent(type, idx) {
+  if(confirm('למחוק?')) {
+    if(type === 'exam') {
+      data.exams.splice(idx, 1);
+    } else {
+      data.events.splice(idx, 1);
+    }
+    saveToFirebase();
+    render();
+  }
+}
+
+function togglePunish(i) {
+  if(!isAdmin) return;
+  data.rewards[i].active = !data.rewards[i].active;
+  saveToFirebase();
+  render();
+}
+
+// Initialize
 updateRoleBadge();
-render();
 </script>
 </body>
 </html>
