@@ -504,7 +504,7 @@ function selectDay(day) { selectedDay = day; render(); }
 
 function renderFullDaySchedule(day) {
   if(day === 6) return '<div class="empty"><span class="emoji">🕯️</span>שבת שלום!<br><small style="color:#64748b">אין פעילויות מתוכננות</small></div>';
-  let html = `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 45px repeat(${FAMILY.length}, 1fr)">`;
+  let html = `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">`;
   html += `<div class="schedule-header">⏰</div>`;
   FAMILY.forEach(m => { html += `<div class="schedule-header" style="background:${m.color}">${m.icon}</div>`; });
   TIMES.forEach(time => {
@@ -633,16 +633,28 @@ function renderKidRewards(kidId, k) {
 }
 
 function getWeekEvents() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const endOfWeek = new Date(today); endOfWeek.setDate(today.getDate() + 7);
+  const today = new Date(); 
+  today.setHours(0,0,0,0);
+  const endOfWeek = new Date(today); 
+  endOfWeek.setDate(today.getDate() + 7);
   const events = [];
   (data.exams || []).forEach((e, idx) => {
-    const d = new Date(e.date);
-    if(d >= today && d <= endOfWeek) events.push({...e, originalIdx: idx, eventType:'exam', daysLeft: Math.ceil((d - today) / 86400000), icon:'📝', dateObj: d});
+    const parts = e.date.split('-');
+    const d = new Date(parts[0], parts[1]-1, parts[2]);
+    d.setHours(0,0,0,0);
+    if(d >= today && d <= endOfWeek) {
+      const daysLeft = Math.round((d - today) / 86400000);
+      events.push({...e, originalIdx: idx, eventType:'exam', daysLeft, icon:'📝', dateObj: d});
+    }
   });
   (data.events || []).forEach((e, idx) => {
-    const d = new Date(e.date);
-    if(d >= today && d <= endOfWeek) events.push({...e, originalIdx: idx, eventType:'event', daysLeft: Math.ceil((d - today) / 86400000), dateObj: d});
+    const parts = e.date.split('-');
+    const d = new Date(parts[0], parts[1]-1, parts[2]);
+    d.setHours(0,0,0,0);
+    if(d >= today && d <= endOfWeek) {
+      const daysLeft = Math.round((d - today) / 86400000);
+      events.push({...e, originalIdx: idx, eventType:'event', daysLeft, dateObj: d});
+    }
   });
   return events.sort((a,b) => a.dateObj - b.dateObj);
 }
