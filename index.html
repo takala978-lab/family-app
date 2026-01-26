@@ -566,10 +566,11 @@ function renderKidPage(kidId) {
 
 function renderKidSchedule(kidId, k) {
   const sch = data.schedules?.[kidId] || {};
+  const daysNoShabbat = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
   let html = `<div class="card"><div class="card-title"><span class="emoji">📅</span> מערכת שעות</div>`;
-  html += `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 50px repeat(6, 1fr)">`;
+  html += `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">`;
   html += `<div class="schedule-header">⏰</div>`;
-  DAYS.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
+  daysNoShabbat.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
   TIMES.forEach(time => {
     html += `<div class="schedule-time">${time}</div>`;
     for(let d=0; d<6; d++) {
@@ -707,12 +708,13 @@ function showMemberSchedule(memberId) {
 function renderMemberFullSchedule(memberId) {
   const m = FAMILY.find(x => x.id === memberId);
   const sch = data.schedules?.[memberId] || {};
+  const daysNoShabbat = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
   let html = `<div class="card" style="border-top: 4px solid ${m.color}">
     <div class="card-title"><span class="emoji">${m.icon}</span> ${m.name}</div>
     <p style="color:#64748b;margin-bottom:16px;font-size:0.85rem">💡 לחץ על תא לעריכה</p>
-    <div class="schedule-container"><div class="schedule" style="grid-template-columns: 50px repeat(6, 1fr)">
+    <div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">
     <div class="schedule-header">⏰</div>`;
-  DAYS.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
+  daysNoShabbat.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
   TIMES.forEach(time => {
     html += `<div class="schedule-time">${time}</div>`;
     for(let d=0; d<6; d++) {
