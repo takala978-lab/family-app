@@ -4,1073 +4,658 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>🏠 ניהול הבית</title>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>🏠 משפחת טקלה</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
-:root {
-  --oshari: #10b981; --yuval: #8b5cf6; --hillel: #f59e0b; --lior: #06b6d4; --avi: #3b82f6; --ariela: #ec4899;
-  --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: 'Rubik', sans-serif; background: var(--bg); min-height: 100vh; direction: rtl; overflow-x: hidden; }
-.app { max-width: 900px; margin: 0 auto; padding: 20px 16px 100px; }
-
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.5); } 50% { box-shadow: 0 0 20px rgba(255,255,255,0.8); } }
-@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.header { text-align: center; padding: 20px; color: white; animation: fadeInUp 0.6s ease; }
-.header h1 { font-size: 2rem; font-weight: 800; text-shadow: 2px 2px 10px rgba(0,0,0,0.3); margin-bottom: 8px; }
-.header .date { font-size: 1.1rem; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 30px; display: inline-block; }
-
-.sync-status { position: fixed; top: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; z-index: 200; display: flex; align-items: center; gap: 6px; }
-.sync-status.online { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
-.sync-status.offline { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
-.sync-status.syncing { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
-.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-.sync-status.syncing .sync-dot { animation: pulse 1s infinite; }
-
-.admin-badge { position: fixed; top: 10px; left: 10px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 200; box-shadow: 0 4px 15px rgba(239,68,68,0.4); cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.user-badge { position: fixed; top: 10px; left: 10px; background: rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; z-index: 200; cursor: pointer; }
-
-.lock-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeInUp 0.3s ease; }
-.lock-box { background: white; border-radius: 24px; padding: 40px; text-align: center; max-width: 350px; width: 90%; animation: fadeInUp 0.4s ease; }
-.lock-icon { font-size: 4rem; margin-bottom: 16px; }
-.lock-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
-.lock-subtitle { color: #64748b; margin-bottom: 24px; font-size: 0.9rem; }
-.pin-input { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
-.pin-digit { width: 50px; height: 60px; border: 3px solid #e2e8f0; border-radius: 12px; font-size: 1.5rem; font-weight: 700; text-align: center; font-family: inherit; transition: all 0.3s; }
-.pin-digit:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139,92,246,0.2); }
-.pin-digit.error { border-color: #ef4444; animation: shake 0.3s ease; }
-.pin-error { color: #ef4444; font-size: 0.85rem; margin-bottom: 16px; display: none; }
-.pin-error.show { display: block; }
-
-.card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); animation: fadeInUp 0.5s ease forwards; transition: transform 0.3s, box-shadow 0.3s; }
-.card:hover { transform: translateY(-3px); box-shadow: 0 15px 45px rgba(0,0,0,0.2); }
-.card-title { display: flex; align-items: center; gap: 12px; font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
-.card-title .emoji { font-size: 1.8rem; animation: bounce 3s ease-in-out infinite; }
-
-.day-selector { display: flex; gap: 8px; justify-content: center; margin: 16px 0; flex-wrap: wrap; }
-.day-btn { padding: 10px 16px; border: none; border-radius: 20px; background: rgba(255,255,255,0.2); color: white; font-family: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s; }
-.day-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
-.day-btn.active { background: white; color: #667eea; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-.day-btn.today { border: 2px solid #fbbf24; }
-
-.schedule-container { overflow-x: auto; border-radius: 16px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 12px; }
-.schedule { display: grid; gap: 2px; min-width: 100%; }
-.schedule-header { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 10px 6px; text-align: center; font-size: 0.7rem; font-weight: 600; border-radius: 8px; }
-.schedule-time { background: linear-gradient(135deg, #64748b, #475569); color: white; padding: 8px 4px; text-align: center; font-size: 0.7rem; font-weight: 600; border-radius: 6px; }
-.schedule-cell { padding: 6px 4px; text-align: center; font-size: 0.65rem; border-radius: 6px; min-height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; background: white; }
-.schedule-cell:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.schedule-cell.has-lesson { font-weight: 600; }
-
-.family-row { display: flex; justify-content: center; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
-.family-avatar { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.3s; }
-.family-avatar:hover { transform: scale(1.1); }
-.family-avatar .icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: glow 3s ease-in-out infinite; }
-.family-avatar .name { font-weight: 600; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); font-size: 0.8rem; }
-
-.events-week { display: flex; flex-direction: column; gap: 12px; }
-.event-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 16px; animation: slideIn 0.5s ease forwards; transition: transform 0.3s; cursor: pointer; }
-.event-item:hover { transform: translateX(-5px); }
-.event-item.exam { background: linear-gradient(135deg, #fee2e2, #fecaca); }
-.event-item.hobby { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); }
-.event-icon { font-size: 2rem; animation: bounce 2s ease-in-out infinite; }
-.event-info { flex: 1; }
-.event-title { font-weight: 700; font-size: 1rem; color: #1e293b; }
-.event-meta { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.event-days { background: rgba(0,0,0,0.1); padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem; }
-
-.nav { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1e293b, #0f172a); display: flex; justify-content: space-around; padding: 10px 8px 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.3); border-radius: 24px 24px 0 0; }
-.nav-btn { background: none; border: none; color: #64748b; padding: 10px 14px; font-size: 0.65rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 16px; transition: all 0.3s; font-family: inherit; position: relative; }
-.nav-btn svg { width: 22px; height: 22px; }
-.nav-btn.active { color: white; background: linear-gradient(135deg, #3b82f6, #8b5cf6); transform: scale(1.1); box-shadow: 0 4px 15px rgba(59,130,246,0.5); }
-
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
-.btn-success { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
-.btn-danger { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
-.btn-warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
-.btn-small { padding: 8px 16px; font-size: 0.8rem; }
-
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000; animation: fadeInUp 0.3s ease; }
-.modal { background: white; border-radius: 24px; width: 100%; max-width: 450px; max-height: 85vh; overflow: hidden; animation: fadeInUp 0.4s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-.modal-header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; }
-.modal-header.admin { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; transition: all 0.3s; }
-.modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #334155; font-size: 0.9rem; }
-.form-group input, .form-group select { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; font-family: inherit; transition: all 0.3s; }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139,92,246,0.1); }
-.form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
-
-.savings-card { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 20px; padding: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; animation: slideIn 0.5s ease forwards; }
-.savings-icon { font-size: 2.5rem; background: rgba(255,255,255,0.5); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.savings-info { flex: 1; }
-.savings-name { font-weight: 700; font-size: 1.1rem; color: #1e293b; }
-.savings-grade { color: #64748b; font-size: 0.85rem; }
-.savings-amount { font-size: 1.8rem; font-weight: 800; color: #059669; }
-.savings-actions { display: flex; gap: 8px; }
-.savings-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 1.2rem; cursor: pointer; transition: all 0.3s; }
-.savings-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.savings-btn.add { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
-.savings-btn.sub { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
-
-.task-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: #f8fafc; border-radius: 16px; margin-bottom: 12px; animation: slideIn 0.4s ease forwards; transition: all 0.3s; }
-.task-item:hover { background: #f1f5f9; transform: translateX(-5px); }
-.task-check { width: 28px; height: 28px; border: 3px solid; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; font-size: 1rem; }
-.task-check.done { background: linear-gradient(135deg, #10b981, #34d399); border-color: #10b981; color: white; }
-.task-text { flex: 1; font-weight: 500; }
-.task-text.done { text-decoration: line-through; opacity: 0.5; }
-.task-badge { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
-.task-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.5; transition: all 0.3s; }
-.task-delete:hover { opacity: 1; }
-
-.empty { text-align: center; padding: 40px 20px; color: #94a3b8; }
-.empty .emoji { font-size: 4rem; display: block; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite; }
-
-.view-only-notice { background: linear-gradient(135deg, #e0f2fe, #bae6fd); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #0369a1; }
-
-.hidden { display: none !important; }
-
-.member-oshari { background: linear-gradient(135deg, var(--oshari), #34d399) !important; }
-.member-yuval { background: linear-gradient(135deg, var(--yuval), #a78bfa) !important; }
-.member-hillel { background: linear-gradient(135deg, var(--hillel), #fbbf24) !important; }
-.member-lior { background: linear-gradient(135deg, var(--lior), #22d3ee) !important; }
-.member-avi { background: linear-gradient(135deg, var(--avi), #60a5fa) !important; }
-.member-ariela { background: linear-gradient(135deg, var(--ariela), #f472b6) !important; }
-
-.kid-page-header { display: flex; align-items: center; gap: 20px; padding: 20px; background: white; border-radius: 24px; margin-bottom: 20px; }
-.kid-page-avatar { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
-.kid-page-info h2 { font-size: 1.5rem; font-weight: 700; color: #1e293b; }
-.kid-page-info p { color: #64748b; }
-
-.tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 8px; }
-.tab { padding: 10px 20px; border: none; border-radius: 12px; background: rgba(255,255,255,0.3); color: white; font-family: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.3s; }
-.tab.active { background: white; color: #667eea; }
-
-.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-.loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
-.loading-text { color: white; margin-top: 20px; font-size: 1.2rem; }
+:root{--primary:#667eea;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--text:#1e293b;--text-light:#64748b;--border:#e2e8f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rubik',sans-serif;background:#f1f5f9;min-height:100vh;direction:rtl}
+.app{max-width:500px;margin:0 auto;padding:16px 16px 90px}
+.header{background:linear-gradient(135deg,#667eea,#764ba2);margin:-16px -16px 16px;padding:20px 16px;color:white}
+.header h1{font-size:1.3rem;font-weight:700}
+.header-sub{opacity:0.9;font-size:0.8rem;margin-top:4px}
+.sync-badge{position:fixed;top:10px;left:10px;padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200}
+.sync-badge.online{background:var(--success);color:white}
+.sync-badge.offline{background:var(--danger);color:white}
+.admin-badge,.user-badge{position:fixed;top:10px;right:10px;padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200;cursor:pointer}
+.admin-badge{background:linear-gradient(135deg,#ef4444,#dc2626);color:white}
+.user-badge{background:rgba(0,0,0,0.3);color:white}
+.card{background:white;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:8px 4px 20px;box-shadow:0 -2px 20px rgba(0,0,0,0.1);border-radius:20px 20px 0 0;z-index:100}
+.nav-btn{background:none;border:none;color:var(--text-light);padding:8px 12px;font-size:0.6rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:12px;font-family:inherit}
+.nav-btn svg{width:22px;height:22px}
+.nav-btn.active{color:var(--primary);background:rgba(102,126,234,0.1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:12px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--primary);color:white}
+.btn-success{background:var(--success);color:white}
+.btn-danger{background:var(--danger);color:white}
+.btn-warning{background:var(--warning);color:white}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text)}
+.btn-small{padding:6px 12px;font-size:0.75rem}
+.btn-fab{position:fixed;bottom:90px;left:20px;width:56px;height:56px;border-radius:50%;font-size:1.5rem;box-shadow:0 4px 15px rgba(102,126,234,0.4);z-index:99}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-weight:600;margin-bottom:6px;font-size:0.85rem}
+.form-input,.form-select{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:1rem;font-family:inherit;background:white}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
+.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:90vh;overflow:hidden}
+.modal-header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.modal-header.admin{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.modal-header.success{background:linear-gradient(135deg,#10b981,#34d399)}
+.modal-title{font-weight:700;font-size:1.1rem}
+.modal-close{background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.modal-body{padding:20px;max-height:70vh;overflow-y:auto}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-actions .btn{flex:1}
+.lock-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000}
+.lock-box{background:white;border-radius:20px;padding:30px;text-align:center;width:90%;max-width:320px}
+.pin-input{display:flex;justify-content:center;gap:10px;margin:20px 0}
+.pin-digit{width:45px;height:55px;border:2px solid var(--border);border-radius:10px;font-size:1.3rem;font-weight:700;text-align:center;font-family:inherit}
+.pin-digit:focus{outline:none;border-color:var(--primary)}
+.pin-error{color:var(--danger);font-size:0.8rem;display:none;margin-bottom:12px}
+.pin-error.show{display:block}
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3000}
+.loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
+.loading-text{color:white;margin-top:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.family-row{display:flex;gap:10px;overflow-x:auto;padding:8px 0}
+.family-avatar{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
+.family-avatar .icon{width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.family-avatar .name{font-size:0.7rem;font-weight:600}
+.member-avi{background:linear-gradient(135deg,#3b82f6,#60a5fa)}
+.member-ariela{background:linear-gradient(135deg,#ec4899,#f472b6)}
+.member-oshari{background:linear-gradient(135deg,#10b981,#34d399)}
+.member-yuval{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
+.member-hillel{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+.member-lior{background:linear-gradient(135deg,#06b6d4,#22d3ee)}
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.quick-action{background:white;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.quick-action .icon{font-size:1.3rem;margin-bottom:2px}
+.quick-action .label{font-size:0.6rem;font-weight:600}
+.item-row{display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px}
+.item-row.done{opacity:0.5}
+.item-check{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.item-check.done{background:var(--success);border-color:var(--success);color:white}
+.item-check.round{border-radius:50%}
+.item-text{flex:1;font-weight:500}
+.item-text.done{text-decoration:line-through}
+.item-meta{font-size:0.7rem;color:var(--text-light)}
+.item-delete{background:none;border:none;font-size:1rem;cursor:pointer;opacity:0.4;padding:4px}
+.item-badge{padding:2px 8px;border-radius:10px;font-size:0.65rem;font-weight:600}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin-bottom:12px}
+.tab{padding:8px 14px;border-radius:20px;background:var(--border);font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;border:none;font-family:inherit}
+.tab.active{background:var(--primary);color:white}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.more-item{background:white;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer}
+.more-item .icon{font-size:1.8rem;margin-bottom:6px}
+.more-item .label{font-size:0.75rem;font-weight:600}
+.more-item .desc{font-size:0.6rem;color:var(--text-light);margin-top:2px}
+.kid-card{background:white;border-radius:12px;padding:16px;margin-bottom:12px;border-right:4px solid var(--primary)}
+.car-card{background:white;border-radius:12px;padding:16px;margin-bottom:12px;border-right:4px solid var(--primary)}
+.car-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.car-stat:last-child{border-bottom:none}
+.date-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;background:white;padding:12px;border-radius:12px}
+.date-nav button{background:var(--primary);color:white;border:none;width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer}
+.date-nav .date-text{font-weight:700;font-size:1rem;min-width:150px;text-align:center}
+.hidden{display:none!important}
+.empty{text-align:center;padding:30px;color:var(--text-light)}
+.empty .emoji{font-size:2.5rem;display:block;margin-bottom:12px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.badge{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:0.7rem;font-weight:600}
+.badge-success{background:#d1fae5;color:#166534}
+.badge-warning{background:#fef3c7;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-info{background:#e0f2fe;color:#0369a1}
+.reward-card{padding:12px;border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.reward-card.bonus{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-right:4px solid var(--success)}
+.reward-card.punish{background:linear-gradient(135deg,#fee2e2,#fecaca);border-right:4px solid var(--danger)}
 </style>
 </head>
 <body>
-
-<div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">🔄 מתחבר...</div>
-</div>
-
-<div class="app" id="app"></div>
-
-<div class="sync-status online" id="sync-status">
-  <span class="sync-dot"></span>
-  <span id="sync-text">מחובר</span>
-</div>
-
+<div class="loading-overlay" id="loading"><div class="loading-spinner"></div><div class="loading-text">🏠 טוען...</div></div>
+<div class="sync-badge online" id="sync-badge"><span id="sync-text">מחובר</span></div>
 <div id="role-badge"></div>
-
+<div class="app" id="app"></div>
 <nav class="nav">
-  <button class="nav-btn active" onclick="showView('home')" id="nav-home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-    בית
-  </button>
-  <button class="nav-btn" onclick="showView('schedule')" id="nav-schedule">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    מערכת
-  </button>
-  <button class="nav-btn" onclick="showView('tasks')" id="nav-tasks">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    מטלות
-  </button>
-  <button class="nav-btn" onclick="showView('savings')" id="nav-savings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M6 12h12"/></svg>
-    חסכון
-  </button>
-  <button class="nav-btn" onclick="showView('rewards')" id="nav-rewards">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-    כוכבים
-  </button>
+<button class="nav-btn active" onclick="nav('home')" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>בית</button>
+<button class="nav-btn" onclick="nav('shop')" data-view="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>קניות</button>
+<button class="nav-btn" onclick="nav('cal')" data-view="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>לו״ז</button>
+<button class="nav-btn" onclick="nav('tasks')" data-view="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>משימות</button>
+<button class="nav-btn" onclick="nav('more')" data-view="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>עוד</button>
 </nav>
-
-<div class="lock-overlay hidden" id="lock-overlay">
-  <div class="lock-box">
-    <div class="lock-icon">🔐</div>
-    <div class="lock-title">אזור מנהל מערכת</div>
-    <div class="lock-subtitle">הזן קוד גישה (4 ספרות)</div>
-    <div class="pin-input">
-      <input type="tel" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)">
-      <input type="tel" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)">
-      <input type="tel" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)">
-      <input type="tel" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)">
-    </div>
-    <div class="pin-error" id="pin-error">❌ קוד שגוי</div>
-    <button class="btn" style="background:#e2e8f0;color:#475569;width:100%" onclick="closeLock()">ביטול</button>
-  </div>
-</div>
-
-<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header" id="modal-header">
-      <span id="modal-title">הוסף</span>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-  </div>
-</div>
-
+<div class="lock-overlay hidden" id="lock-overlay"><div class="lock-box"><div style="font-size:3rem;margin-bottom:12px">🔐</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">כניסת מנהל</div><div style="color:var(--text-light);font-size:0.85rem;margin-bottom:12px">הזן קוד (4 ספרות)</div><div class="pin-input"><input type="tel" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)"><input type="tel" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)"><input type="tel" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)"><input type="tel" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)"></div><div class="pin-error" id="pin-error">❌ קוד שגוי</div><button class="btn btn-outline" style="width:100%" onclick="closeLock()">ביטול</button></div></div>
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="modal-header"><span class="modal-title" id="modal-title">הוסף</span><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body" id="modal-body"></div></div></div>
 <script>
-// ==================== FIREBASE CONFIG ====================
-const firebaseConfig = {
-  apiKey: "AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",
-  authDomain: "family-app-25459.firebaseapp.com",
-  databaseURL: "https://family-app-25459-default-rtdb.firebaseio.com",
-  projectId: "family-app-25459",
-  storageBucket: "family-app-25459.firebasestorage.app",
-  messagingSenderId: "272616434592",
-  appId: "1:272616434592:web:af16fb017795eca5a6d2c5"
-};
+try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){console.error(e);}
+const db=firebase.database(),dataRef=db.ref('familyDataV3');
+const PIN='1234';
+const FAMILY=[{id:'avi',name:'אבא אבי',short:'אבי',icon:'👨',color:'#3b82f6',type:'parent'},{id:'ariela',name:'אמא אריאלה',short:'אריאלה',icon:'👩',color:'#ec4899',type:'parent'},{id:'oshari',name:'אושרי',short:'אושרי',icon:'👦',grade:'ד׳',color:'#10b981',type:'child'},{id:'yuval',name:'יובל',short:'יובל',icon:'👧',grade:'ו׳',color:'#8b5cf6',type:'child'},{id:'hillel',name:'הלל',short:'הלל',icon:'👧',grade:'ח׳',color:'#f59e0b',type:'child'},{id:'lior',name:'ליאור',short:'ליאור',icon:'👶',grade:'גן',color:'#06b6d4',type:'child'}];
+const KIDS=FAMILY.filter(m=>m.type==='child');
+const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const TIMES=['05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+const MEALS=['בוקר','צהריים','ערב'];
+const SHOP_CATS=[{id:'all',name:'הכל',icon:'📋'},{id:'food',name:'מזון',icon:'🥛'},{id:'produce',name:'ירקות ופירות',icon:'🥬'},{id:'meat',name:'בשר',icon:'🥩'},{id:'cleaning',name:'ניקיון',icon:'🧹'},{id:'disposable',name:'חד פעמי',icon:'🍽️'},{id:'hygiene',name:'היגיינה',icon:'🧴'},{id:'home',name:'לבית',icon:'🏠'}];
+const EVENT_TYPES=[{id:'event',name:'אירוע',icon:'📅',color:'#f59e0b'},{id:'exam',name:'מבחן',icon:'📝',color:'#ef4444'},{id:'doctor',name:'רופא',icon:'🏥',color:'#06b6d4'},{id:'birthday',name:'יום הולדת',icon:'🎂',color:'#ec4899'},{id:'trip',name:'טיול',icon:'🚗',color:'#10b981'},{id:'sport',name:'ספורט',icon:'⚽',color:'#3b82f6'},{id:'workout',name:'אימון',icon:'🏃',color:'#8b5cf6'},{id:'car',name:'רכב',icon:'🚗',color:'#64748b'},{id:'other',name:'אחר',icon:'📌',color:'#64748b'}];
+const WORKOUT_TYPES=['ריצה','הליכה','חדר כושר','שחייה','אופניים','יוגה','כדורסל','כדורגל','טניס','אחר'];
+const REWARD_TYPES=[{id:'money',name:'כסף',icon:'💰'},{id:'restaurant',name:'מסעדה',icon:'🍕'},{id:'movie',name:'סרט',icon:'🎬'},{id:'game',name:'משחק',icon:'🎮'},{id:'trip',name:'טיול',icon:'🎢'},{id:'screen',name:'זמן מסך',icon:'📱'},{id:'other',name:'אחר',icon:'🎁'}];
+const PUNISH_TYPES=[{id:'fine',name:'קנס',icon:'💸'},{id:'nophone',name:'ללא טלפון',icon:'📵'},{id:'nogame',name:'ללא משחקים',icon:'🎮'},{id:'noscreen',name:'ללא מסכים',icon:'📺'},{id:'chore',name:'משימה נוספת',icon:'🧹'},{id:'other',name:'אחר',icon:'⚠️'}];
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const dataRef = db.ref('familyData');
-
-// ==================== CONFIG ====================
-const ADMIN_PIN = '1234';
-
-const FAMILY = [
-  {id:'avi', name:'אבא אבי', icon:'👨', color:'#3b82f6', type:'parent'},
-  {id:'ariela', name:'אמא אריאלה', icon:'👩', color:'#ec4899', type:'parent'},
-  {id:'oshari', name:'אושרי', icon:'👦', grade:'ד׳', color:'#10b981', type:'child', sch:true},
-  {id:'yuval', name:'יובל', icon:'👧', grade:'ו׳', color:'#8b5cf6', type:'child', sch:true},
-  {id:'hillel', name:'הלל', icon:'👧', grade:'ח׳', color:'#f59e0b', type:'child', sch:true},
-  {id:'lior', name:'ליאור', icon:'👶', grade:'גן', color:'#06b6d4', type:'child', sch:false}
-];
-
-const KIDS = FAMILY.filter(m => m.type === 'child');
-const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
-
-const DEFAULT_DATA = {
-  schedules: {
-    avi: {0:[],1:[],2:[],3:[],4:[],5:[]},
-    ariela: {0:[],1:[],2:[],3:[],4:[],5:[]},
-    oshari: {
-      0:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'כישורי חיים'},{t:'12:00',s:'חנ״ג'},{t:'13:00',s:'מתמטיקה'},{t:'17:00',s:'⚽ כדורגל'}],
-      1:[{t:'08:00',s:'שפה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'גיאומטריה'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏃 הישרדות'}],
-      2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'ספריה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'עולם מופלא'}],
-      3:[{t:'08:00',s:'גיאומטריה'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'אומנות'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'אומנות'},{t:'17:00',s:'⚽ כדורגל'}],
-      4:[{t:'08:00',s:'שפה'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'חנ״ג'},{t:'12:00',s:'תנ״ך'},{t:'17:00',s:'⚽ כדורגל'},{t:'18:00',s:'🏃 הישרדות'}],
-      5:[{t:'08:00',s:'מולדת'},{t:'09:00',s:'מולדת'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מדעים'}]
-    },
-    yuval: {
-      0:[{t:'08:00',s:'כישורי חיים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'תנ״ך'},{t:'11:00',s:'אנגלית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
-      1:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'מדעים'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'תנ״ך'},{t:'12:00',s:'שפה'}],
-      2:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'חנ״ג'},{t:'11:00',s:'ערבית'},{t:'12:00',s:'אנגלית'},{t:'17:00',s:'🏀 כדורסל'}],
-      3:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'אומנות'},{t:'10:00',s:'קרן קרב'},{t:'11:00',s:'קרן קרב'},{t:'12:00',s:'היסטוריה'}],
-      4:[{t:'08:00',s:'היסטוריה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'שפה'},{t:'11:00',s:'שפה'},{t:'12:00',s:'מתמטיקה'}],
-      5:[{t:'08:00',s:'מדעים'},{t:'09:00',s:'שפה'},{t:'10:00',s:'מפתח הלב'},{t:'11:00',s:'מפתח הלב'},{t:'12:00',s:'🏀 כדורסל'}]
-    },
-    hillel: {
-      0:[{t:'08:00',s:'חינוך'},{t:'09:00',s:'ספורט'},{t:'10:00',s:'שלח'},{t:'11:00',s:'שלח'},{t:'12:00',s:'מדעים'},{t:'13:00',s:'אנגלית'}],
-      1:[{t:'08:00',s:'חשיבה'},{t:'09:00',s:'תנ״ך'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'},{t:'12:00',s:'מתמטיקה'},{t:'17:00',s:'🎾 טניס'}],
-      2:[{t:'08:00',s:'מתמטיקה'},{t:'09:00',s:'מתמטיקה'},{t:'10:00',s:'ספורט'},{t:'11:00',s:'מדעים'},{t:'12:00',s:'מדעים'}],
-      3:[{t:'08:00',s:'גיאוגרפיה'},{t:'09:00',s:'גיאוגרפיה'},{t:'10:00',s:'אנגלית'},{t:'11:00',s:'היסטוריה'},{t:'12:00',s:'חינוך'}],
-      4:[{t:'08:00',s:'אנגלית'},{t:'09:00',s:'אנגלית'},{t:'10:00',s:'מתמטיקה'},{t:'11:00',s:'מתמטיקה'},{t:'12:00',s:'תקשורת'},{t:'17:00',s:'🎾 טניס'}],
-      5:[{t:'08:00',s:'ערבית'},{t:'09:00',s:'ערבית'},{t:'10:00',s:'עברית'},{t:'11:00',s:'עברית'}]
-    },
-    lior: {0:[],1:[],2:[],3:[],4:[],5:[]}
-  },
-  tasks: [
-    {id:1, kid:'yuval', text:'פיזור כביסה', freq:'יומי', done:false},
-    {id:2, kid:'oshari', text:'פיזור מדיח', freq:'יומי', done:false},
-    {id:3, kid:'hillel', text:'קיפול כביסה', freq:'יומי', done:false}
+const DEFAULT={
+  tasks:[],shopping:[],events:[],
+  money:{oshari:0,yuval:0,hillel:0,lior:0},
+  points:{oshari:0,yuval:0,hillel:0,lior:0},
+  grades:{oshari:[],yuval:[],hillel:[]},
+  rewards:[],
+  cars:[
+    {id:'car1',name:'רכב 1',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''},
+    {id:'car2',name:'רכב 2',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''}
   ],
-  exams: [],
-  events: [],
-  rewards: [],
-  money: {oshari:0, yuval:0, hillel:0, lior:0},
-  history: {oshari:[], yuval:[], hillel:[], lior:[]}
+  meals:{},workouts:[],
+  schedules:{avi:{},ariela:{},oshari:{},yuval:{},hillel:{},lior:{}},
+  emergency:{contacts:[{name:'משטרה',phone:'100',icon:'🚔'},{name:'מד״א',phone:'101',icon:'🚑'},{name:'כיבוי',phone:'102',icon:'🚒'}]}
 };
 
-let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-let currentView = 'home';
-let currentMember = null;
-let currentKidPage = null;
-let currentKidTab = 'schedule';
-let selectedDay = new Date().getDay();
-if(selectedDay === 6) selectedDay = 0;
-let isAdmin = false;
-let pendingAdminView = null;
-let isOnline = true;
+let D=JSON.parse(JSON.stringify(DEFAULT));
+let view='home',member=null,mTab='schedule',shopCat='all',calDate=new Date(),selDate=null,isAdmin=false,moreTab='main';
+let homeDate=new Date();
 
-// ==================== FIREBASE SYNC ====================
-function updateSyncStatus(status) {
-  const el = document.getElementById('sync-status');
-  const text = document.getElementById('sync-text');
-  el.className = 'sync-status ' + status;
-  if(status === 'online') text.textContent = 'מסונכרן ✓';
-  else if(status === 'offline') text.textContent = 'לא מחובר';
-  else if(status === 'syncing') text.textContent = 'מסנכרן...';
-}
+function sync(s){document.getElementById('sync-badge').className='sync-badge '+s;document.getElementById('sync-text').textContent=s==='online'?'✓':'⚠';}
+function save(){sync('syncing');dataRef.set(D).then(()=>sync('online')).catch(()=>sync('offline'));}
+dataRef.on('value',snap=>{const v=snap.val();if(v)D={...DEFAULT,...v};document.getElementById('loading').classList.add('hidden');sync('online');render();});
+dataRef.once('value').then(s=>{if(!s.val())dataRef.set(DEFAULT);});
 
-function saveToFirebase() {
-  updateSyncStatus('syncing');
-  dataRef.set(data).then(() => {
-    updateSyncStatus('online');
-  }).catch((err) => {
-    console.error('Save error:', err);
-    updateSyncStatus('offline');
-  });
-}
+function nav(v){view=v;member=null;moreTab='main';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-view="${v}"]`)?.classList.add('active');render();}
+function showMember(id){member=id;mTab='schedule';render();}
+function setMTab(t){mTab=t;render();}
+function setMoreTab(t){moreTab=t;render();}
 
-// Listen for realtime updates
-dataRef.on('value', (snapshot) => {
-  const val = snapshot.val();
-  if(val) {
-    data = val;
-    // Ensure all required fields exist
-    if(!data.tasks) data.tasks = [];
-    if(!data.exams) data.exams = [];
-    if(!data.events) data.events = [];
-    if(!data.rewards) data.rewards = [];
-    if(!data.money) data.money = {oshari:0, yuval:0, hillel:0, lior:0};
-    if(!data.history) data.history = {oshari:[], yuval:[], hillel:[], lior:[]};
-    render();
-  }
-  document.getElementById('loading').classList.add('hidden');
-  updateSyncStatus('online');
-});
+function showLock(){document.getElementById('lock-overlay').classList.remove('hidden');['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin-error').classList.remove('show');setTimeout(()=>document.getElementById('pin1').focus(),100);}
+function closeLock(){document.getElementById('lock-overlay').classList.add('hidden');}
+function handlePin(d){const i=document.getElementById('pin'+d);if(i.value&&d<4)document.getElementById('pin'+(d+1)).focus();const p=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(p.length===4){if(p===PIN){isAdmin=true;closeLock();updateBadge();render();}else{document.getElementById('pin-error').classList.add('show');document.querySelectorAll('.pin-digit').forEach(el=>{el.style.borderColor='var(--danger)';});setTimeout(()=>{document.querySelectorAll('.pin-digit').forEach(el=>{el.style.borderColor='';el.value='';});document.getElementById('pin1').focus();},500);}}}
+function handlePinKey(e,d){if(e.key==='Backspace'&&!e.target.value&&d>1)document.getElementById('pin'+(d-1)).focus();}
+function logout(){if(confirm('להתנתק?')){isAdmin=false;updateBadge();render();}}
+function updateBadge(){document.getElementById('role-badge').innerHTML=isAdmin?'<div class="admin-badge" onclick="logout()">👑 מנהל</div>':'<div class="user-badge" onclick="showLock()">🔓 מנהל</div>';}
 
-// Handle connection state
-db.ref('.info/connected').on('value', (snap) => {
-  isOnline = snap.val() === true;
-  updateSyncStatus(isOnline ? 'online' : 'offline');
-});
+function modal(title,content,type=''){document.getElementById('modal-title').textContent=title;document.getElementById('modal-header').className='modal-header'+(type?' '+type:'');document.getElementById('modal-body').innerHTML=content;document.getElementById('modal-overlay').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
+function fmtDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+function parseDate(s){if(!s)return new Date();const[y,m,d]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,parseInt(d));}
 
-// Initialize with default data if empty
-dataRef.once('value').then((snapshot) => {
-  if(!snapshot.val()) {
-    dataRef.set(DEFAULT_DATA);
-  }
-});
+function render(){const app=document.getElementById('app');if(member)app.innerHTML=renderMember();else if(view==='home')app.innerHTML=renderHome();else if(view==='shop')app.innerHTML=renderShop();else if(view==='cal')app.innerHTML=renderCal();else if(view==='tasks')app.innerHTML=renderTasks();else if(view==='more')app.innerHTML=renderMore();else app.innerHTML=renderHome();}
 
-// ==================== UI FUNCTIONS ====================
-function showView(view) {
-  currentView = view;
-  currentMember = null;
-  currentKidPage = null;
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('nav-' + view)?.classList.add('active');
-  render();
-}
+function changeHomeDate(delta){homeDate.setDate(homeDate.getDate()+delta);render();}
+function goToday(){homeDate=new Date();render();}
 
-function showLock() {
-  document.getElementById('lock-overlay').classList.remove('hidden');
-  document.getElementById('pin1').value = '';
-  document.getElementById('pin2').value = '';
-  document.getElementById('pin3').value = '';
-  document.getElementById('pin4').value = '';
-  document.getElementById('pin-error').classList.remove('show');
-  setTimeout(() => document.getElementById('pin1').focus(), 100);
-}
-
-function closeLock() {
-  document.getElementById('lock-overlay').classList.add('hidden');
-  pendingAdminView = null;
-}
-
-function handlePin(digit) {
-  const input = document.getElementById('pin' + digit);
-  if(input.value && digit < 4) {
-    document.getElementById('pin' + (digit + 1)).focus();
-  }
-  const pin = document.getElementById('pin1').value + document.getElementById('pin2').value + document.getElementById('pin3').value + document.getElementById('pin4').value;
-  if(pin.length === 4) {
-    if(pin === ADMIN_PIN) {
-      isAdmin = true;
-      closeLock();
-      updateRoleBadge();
-      render();
-    } else {
-      document.getElementById('pin-error').classList.add('show');
-      document.querySelectorAll('.pin-digit').forEach(el => el.classList.add('error'));
-      setTimeout(() => {
-        document.querySelectorAll('.pin-digit').forEach(el => { el.classList.remove('error'); el.value = ''; });
-        document.getElementById('pin1').focus();
-      }, 500);
-    }
-  }
-}
-
-function handlePinKey(event, digit) {
-  if(event.key === 'Backspace' && !event.target.value && digit > 1) {
-    document.getElementById('pin' + (digit - 1)).focus();
-  }
-}
-
-function logout() {
-  if(confirm('להתנתק ממצב מנהל?')) {
-    isAdmin = false;
-    updateRoleBadge();
-    showView('home');
-  }
-}
-
-function updateRoleBadge() {
-  const badge = document.getElementById('role-badge');
-  if(isAdmin) {
-    badge.innerHTML = '<div class="admin-badge" onclick="logout()">👑 מנהל - אבי <span style="opacity:0.7">(יציאה)</span></div>';
-  } else {
-    badge.innerHTML = '<div class="user-badge" onclick="showLock()">🔓 כניסת מנהל</div>';
-  }
-}
-
-function render() {
-  const app = document.getElementById('app');
-  const today = new Date();
-  const todayDay = today.getDay();
+function renderHome(){
+  const dateStr=homeDate.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const dayIdx=homeDate.getDay();
+  const todayDateStr=fmtDate(homeDate);
   
-  if(currentKidPage) {
-    app.innerHTML = renderKidPage(currentKidPage);
-  } else if(currentView === 'home') {
-    app.innerHTML = renderHome(today, todayDay);
-  } else if(currentView === 'schedule') {
-    app.innerHTML = renderSchedulePage();
-  } else if(currentView === 'tasks') {
-    app.innerHTML = renderTasksPage();
-  } else if(currentView === 'savings') {
-    app.innerHTML = renderSavingsPage();
-  } else if(currentView === 'rewards') {
-    app.innerHTML = renderRewardsPage();
-  }
-}
-
-function renderHome(today, todayDay) {
-  const weekEvents = getWeekEvents();
-  const dayName = selectedDay === todayDay ? `היום - ${DAYS[selectedDay]}` : DAYS[selectedDay];
+  // Get events for this day
+  const dayEvents=(D.events||[]).filter(e=>e.date===todayDateStr).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   
-  return `
-    <div class="header">
-      <h1>🏠 משפחת אבי</h1>
-      <div class="date">${today.toLocaleDateString('he-IL', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
-    </div>
-    
-    <div class="family-row">
-      ${FAMILY.map(m => `
-        <div class="family-avatar" onclick="${m.type==='child' ? `showKidPage('${m.id}')` : `showMemberSchedule('${m.id}')`}">
-          <div class="icon member-${m.id}">${m.icon}</div>
-          <div class="name">${m.name.split(' ')[0]}</div>
-        </div>
-      `).join('')}
-    </div>
-    
-    <div class="day-selector">
-      ${DAYS.map((d, i) => `
-        <button class="day-btn ${selectedDay===i?'active':''} ${todayDay===i?'today':''}" onclick="selectDay(${i})">
-          ${d} ${todayDay===i?'📍':''}
-        </button>
-      `).join('')}
-    </div>
-    
-    <div class="card">
-      <div class="card-title"><span class="emoji">📅</span> לוח זמנים - ${dayName}</div>
-      ${renderFullDaySchedule(selectedDay)}
-    </div>
-    
-    <div class="card">
-      <div class="card-title"><span class="emoji">⭐</span> השבוע הקרוב</div>
-      ${weekEvents.length === 0 ? '<div class="empty"><span class="emoji">📭</span>אין אירועים השבוע</div>' : `
-        <div class="events-week">${weekEvents.map(e => renderEventItem(e, e.originalIdx, e.eventType)).join('')}</div>
-      `}
-      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-small" onclick="openModal('event')">➕ אירוע</button>
-        <button class="btn btn-warning btn-small" onclick="openModal('exam')">📝 מבחן</button>
-      </div>
-    </div>
-  `;
-}
-
-function selectDay(day) { selectedDay = day; render(); }
-
-function renderFullDaySchedule(day) {
-  if(day === 6) return '<div class="empty"><span class="emoji">🕯️</span>שבת שלום!<br><small style="color:#64748b">אין פעילויות מתוכננות</small></div>';
-  let html = `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">`;
-  html += `<div class="schedule-header">⏰</div>`;
-  FAMILY.forEach(m => { html += `<div class="schedule-header" style="background:${m.color}">${m.icon}</div>`; });
-  TIMES.forEach(time => {
-    html += `<div class="schedule-time">${time}</div>`;
-    FAMILY.forEach(m => {
-      const sch = data.schedules?.[m.id]?.[day] || [];
-      const lesson = sch.find(l => l.t === time);
-      const bg = lesson?.s ? m.color + '20' : 'white';
-      html += `<div class="schedule-cell ${lesson?.s?'has-lesson':''}" style="background:${bg}" onclick="editLesson('${m.id}',${day},'${time}')">${lesson?.s || ''}</div>`;
+  // Get workouts for this day
+  const dayWorkouts=(D.workouts||[]).filter(w=>w.day===dayIdx);
+  
+  // Get sports from schedules for this day
+  const sportFromSch=[];
+  FAMILY.forEach(m=>{
+    const sch=D.schedules?.[m.id]?.[dayIdx]||[];
+    sch.forEach(l=>{
+      if(l.s&&(l.s.includes('⚽')||l.s.includes('🏀')||l.s.includes('🎾')||l.s.includes('🏃'))){
+        sportFromSch.push({member:m.id,time:l.t,activity:l.s,memberName:m.short,memberIcon:m.icon});
+      }
     });
   });
-  html += '</div></div><p style="text-align:center;color:#94a3b8;font-size:0.8rem;margin-top:12px">💡 לחץ על תא להוספה/עריכה</p>';
-  return html;
-}
-
-function showKidPage(kidId) {
-  currentKidPage = kidId;
-  currentKidTab = 'schedule';
-  render();
-}
-
-function setKidTab(tab) {
-  currentKidTab = tab;
-  render();
-}
-
-function renderKidPage(kidId) {
-  const k = FAMILY.find(x => x.id === kidId);
-  const kidTasks = (data.tasks || []).filter(t => t.kid === kidId);
   
-  return `
-    <div class="header">
-      <button onclick="currentKidPage=null;render()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:12px;cursor:pointer;font-family:inherit;margin-bottom:12px">← חזרה</button>
-    </div>
-    
-    <div class="kid-page-header">
-      <div class="kid-page-avatar member-${k.id}">${k.icon}</div>
-      <div class="kid-page-info">
-        <h2>${k.name}</h2>
-        <p>${k.grade === 'גן' ? 'גן חובה' : 'כיתה ' + k.grade}</p>
-      </div>
-      <div style="margin-right:auto;text-align:center">
-        <div style="font-size:0.8rem;color:#64748b">חיסכון</div>
-        <div style="font-size:1.5rem;font-weight:800;color:${k.color}">₪${data.money?.[kidId] || 0}</div>
-      </div>
-    </div>
-    
-    <div class="tabs">
-      <button class="tab ${currentKidTab==='schedule'?'active':''}" onclick="setKidTab('schedule')">📅 מערכת</button>
-      <button class="tab ${currentKidTab==='tasks'?'active':''}" onclick="setKidTab('tasks')">✅ מטלות</button>
-      <button class="tab ${currentKidTab==='rewards'?'active':''}" onclick="setKidTab('rewards')">⭐ כוכבים</button>
-    </div>
-    
-    ${currentKidTab === 'schedule' ? renderKidSchedule(kidId, k) : ''}
-    ${currentKidTab === 'tasks' ? renderKidTasks(kidId, k, kidTasks) : ''}
-    ${currentKidTab === 'rewards' ? renderKidRewards(kidId, k) : ''}
-  `;
-}
-
-function renderKidSchedule(kidId, k) {
-  const sch = data.schedules?.[kidId] || {};
-  const daysNoShabbat = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
-  let html = `<div class="card"><div class="card-title"><span class="emoji">📅</span> מערכת שעות</div>`;
-  html += `<div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">`;
-  html += `<div class="schedule-header">⏰</div>`;
-  daysNoShabbat.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
-  TIMES.forEach(time => {
-    html += `<div class="schedule-time">${time}</div>`;
-    for(let d=0; d<6; d++) {
-      const lesson = (sch[d] || []).find(l => l.t === time);
-      const bg = lesson?.s ? k.color + '20' : 'white';
-      html += `<div class="schedule-cell ${lesson?.s?'has-lesson':''}" style="background:${bg}" onclick="editLesson('${kidId}',${d},'${time}')">${lesson?.s || ''}</div>`;
-    }
-  });
-  html += `</div></div></div>`;
-  return html;
-}
-
-function renderKidTasks(kidId, k, kidTasks) {
-  return `
-    <div class="card">
-      <div class="card-title"><span class="emoji">✅</span> המטלות שלי</div>
-      ${kidTasks.length === 0 ? '<div class="empty"><span class="emoji">🎉</span>אין מטלות!</div>' : `
-        ${kidTasks.map(t => {
-          const idx = data.tasks.indexOf(t);
-          return `
-            <div class="task-item" style="border-right:4px solid ${k.color}">
-              <div class="task-check ${t.done?'done':''}" style="border-color:${k.color}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div>
-              <div class="task-text ${t.done?'done':''}">${t.text}</div>
-              <span class="task-badge" style="background:${k.color}20;color:${k.color}">${t.freq}</span>
-            </div>
-          `;
-        }).join('')}
-      `}
-    </div>
-  `;
-}
-
-function renderKidRewards(kidId, k) {
-  const kidRewards = (data.rewards || []).filter(r => r.kid === kidId && r.type === 'reward');
-  const kidPunish = (data.rewards || []).filter(r => r.kid === kidId && r.type === 'punish' && r.active);
+  const tasks=(D.tasks||[]).filter(t=>!t.done);
+  const shop=(D.shopping||[]).filter(s=>!s.done).slice(0,3);
   
-  return `
-    <div class="card">
-      <div class="card-title"><span class="emoji">🎁</span> הבונוסים שלי</div>
-      ${kidRewards.length === 0 ? '<div class="empty"><span class="emoji">🌟</span>אין בונוסים עדיין</div>' : `
-        ${kidRewards.map(r => `
-          <div class="task-item" style="border-right:4px solid ${k.color};background:linear-gradient(135deg,#d1fae520,#a7f3d020)">
-            <span style="font-size:1.5rem">🎁</span>
-            <div class="task-text">${r.reason}<br><small style="color:#10b981;font-weight:600">${r.val}</small></div>
-          </div>
-        `).join('')}
-      `}
-    </div>
-    ${kidPunish.length > 0 ? `
-      <div class="card">
-        <div class="card-title"><span class="emoji">⚠️</span> עונשים פעילים</div>
-        ${kidPunish.map(r => `
-          <div class="task-item" style="border-right:4px solid #ef4444;background:linear-gradient(135deg,#fee2e220,#fecaca20)">
-            <span style="font-size:1.5rem">⚠️</span>
-            <div class="task-text">${r.reason}<br><small style="color:#ef4444;font-weight:600">${r.val}</small></div>
-          </div>
-        `).join('')}
-      </div>
-    ` : ''}
-  `;
-}
+  return `<div class="header"><h1>🏠 משפחת טקלה</h1></div>
+<div class="date-nav">
+  <button onclick="changeHomeDate(-1)">◀</button>
+  <div class="date-text">${dateStr}</div>
+  <button onclick="changeHomeDate(1)">▶</button>
+</div>
+<div style="text-align:center;margin-bottom:16px"><button class="btn btn-small btn-outline" onclick="goToday()">היום</button></div>
 
-function getWeekEvents() {
-  const today = new Date(); 
-  today.setHours(0,0,0,0);
-  const endOfWeek = new Date(today); 
-  endOfWeek.setDate(today.getDate() + 7);
-  const events = [];
-  (data.exams || []).forEach((e, idx) => {
-    const parts = e.date.split('-');
-    const d = new Date(parts[0], parts[1]-1, parts[2]);
-    d.setHours(0,0,0,0);
-    if(d >= today && d <= endOfWeek) {
-      const daysLeft = Math.round((d - today) / 86400000);
-      events.push({...e, originalIdx: idx, eventType:'exam', daysLeft, icon:'📝', dateObj: d});
-    }
-  });
-  (data.events || []).forEach((e, idx) => {
-    const parts = e.date.split('-');
-    const d = new Date(parts[0], parts[1]-1, parts[2]);
-    d.setHours(0,0,0,0);
-    if(d >= today && d <= endOfWeek) {
-      const daysLeft = Math.round((d - today) / 86400000);
-      events.push({...e, originalIdx: idx, eventType:'event', daysLeft, dateObj: d});
-    }
-  });
-  return events.sort((a,b) => a.dateObj - b.dateObj);
-}
+<div class="quick-actions">
+<div class="quick-action" onclick="openAddShop()"><div class="icon">🛒</div><div class="label">קניות</div></div>
+<div class="quick-action" onclick="openAddEvent()"><div class="icon">📅</div><div class="label">אירוע</div></div>
+<div class="quick-action" onclick="openAddTask()"><div class="icon">✅</div><div class="label">משימה</div></div>
+<div class="quick-action" onclick="openAddWorkout()"><div class="icon">🏃</div><div class="label">אימון</div></div>
+</div>
 
-function renderEventItem(e, idx, type) {
-  const m = FAMILY.find(x => x.id === e.kid);
-  const typeClass = type === 'exam' ? 'exam' : 'hobby';
-  const daysText = e.daysLeft === 0 ? '🔥 היום!' : e.daysLeft === 1 ? '⏰ מחר' : `בעוד ${e.daysLeft} ימים`;
-  return `
-    <div class="event-item ${typeClass}">
-      <div class="event-icon">${e.icon || '🎯'}</div>
-      <div class="event-info">
-        <div class="event-title">${e.title || e.subj}</div>
-        <div class="event-meta">
-          ${m ? `<span>${m.icon} ${m.name.split(' ')[0]}</span>` : '<span>👨‍👩‍👧‍👦 כולם</span>'}
-          <span>${new Date(e.date).toLocaleDateString('he-IL', {weekday:'short', day:'numeric', month:'short'})}</span>
-        </div>
-      </div>
-      <div class="event-days">${daysText}</div>
-      <button class="task-delete" onclick="deleteEvent('${type}',${idx})" style="margin-right:8px">🗑️</button>
-    </div>
-  `;
-}
+<div class="card"><div class="card-header"><div class="card-title">👨‍👩‍👧‍👦 בני המשפחה</div></div><div class="family-row">${FAMILY.map(m=>`<div class="family-avatar" onclick="showMember('${m.id}')"><div class="icon member-${m.id}">${m.icon}</div><div class="name">${m.short}</div></div>`).join('')}</div></div>
 
-function renderSchedulePage() {
-  return `
-    <div class="header"><h1>📅 מערכת שעות</h1><p style="opacity:0.8">בחר בן משפחה</p></div>
-    <div class="family-row">
-      ${FAMILY.map(m => `
-        <div class="family-avatar" onclick="showMemberSchedule('${m.id}')" style="opacity:${currentMember===m.id||!currentMember?1:0.5}">
-          <div class="icon member-${m.id}">${m.icon}</div>
-          <div class="name">${m.name.split(' ')[0]}</div>
-        </div>
-      `).join('')}
-    </div>
-    ${currentMember ? renderMemberFullSchedule(currentMember) : '<div class="card"><div class="empty"><span class="emoji">👆</span>בחר בן משפחה</div></div>'}
-  `;
-}
+${dayEvents.length||dayWorkouts.length||sportFromSch.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">📅 לו״ז היום</div>
+${dayEvents.map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const m=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-weight:600">${e.time||'-'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${m?m.icon+' '+m.short:'כולם'}</div></div></div>`;}).join('')}
+${dayWorkouts.map(w=>{const m=FAMILY.find(x=>x.id===w.member);return `<div class="item-row" style="border-right:3px solid #8b5cf6"><div style="min-width:50px;font-weight:600">${w.time}</div><div style="flex:1"><div style="font-weight:600">🏃 ${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''}</div></div></div>`;}).join('')}
+${sportFromSch.map(s=>`<div class="item-row" style="border-right:3px solid #3b82f6"><div style="min-width:50px;font-weight:600">${s.time}</div><div style="flex:1"><div style="font-weight:600">${s.activity}</div><div class="item-meta">${s.memberIcon} ${s.memberName} • מהמערכת</div></div></div>`).join('')}
+</div>`:'<div class="card"><div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים להיום</div></div>'}
 
-function showMemberSchedule(memberId) {
-  currentMember = currentMember === memberId ? null : memberId;
-  if(currentView !== 'schedule') {
-    currentView = 'schedule';
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('nav-schedule')?.classList.add('active');
-  }
-  render();
-}
+${tasks.length?`<div class="card"><div class="card-header"><div class="card-title">✅ משימות</div><span class="badge badge-warning">${tasks.length}</span></div>${tasks.slice(0,3).map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join('')}</div>`:''}
 
-function renderMemberFullSchedule(memberId) {
-  const m = FAMILY.find(x => x.id === memberId);
-  const sch = data.schedules?.[memberId] || {};
-  const daysNoShabbat = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
-  let html = `<div class="card" style="border-top: 4px solid ${m.color}">
-    <div class="card-title"><span class="emoji">${m.icon}</span> ${m.name}</div>
-    <p style="color:#64748b;margin-bottom:16px;font-size:0.85rem">💡 לחץ על תא לעריכה</p>
-    <div class="schedule-container"><div class="schedule" style="grid-template-columns: 55px repeat(6, 1fr)">
-    <div class="schedule-header">⏰</div>`;
-  daysNoShabbat.forEach(d => { html += `<div class="schedule-header">${d}</div>`; });
-  TIMES.forEach(time => {
-    html += `<div class="schedule-time">${time}</div>`;
-    for(let d=0; d<6; d++) {
-      const lesson = (sch[d] || []).find(l => l.t === time);
-      const bg = lesson?.s ? m.color + '20' : 'white';
-      html += `<div class="schedule-cell ${lesson?.s?'has-lesson':''}" style="background:${bg}" onclick="editLesson('${memberId}',${d},'${time}')">${lesson?.s || ''}</div>`;
-    }
-  });
-  html += `</div></div></div>`;
-  return html;
-}
+${shop.length?`<div class="card"><div class="card-header"><div class="card-title">🛒 קניות</div></div>${shop.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}</div>`:''}`;}
 
-function editLesson(memberId, day, time) {
-  const m = FAMILY.find(x => x.id === memberId);
-  const sch = data.schedules?.[memberId]?.[day] || [];
-  const current = sch.find(l => l.t === time)?.s || '';
-  document.getElementById('modal-header').className = 'modal-header';
-  document.getElementById('modal-title').textContent = `${DAYS[day]} ${time}`;
-  document.getElementById('modal-body').innerHTML = `
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="width:80px;height:80px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:3rem;background:${m.color}20">${m.icon}</div>
-      <div style="font-weight:700;margin-top:8px">${m.name}</div>
-    </div>
-    <div class="form-group">
-      <label>פעילות / שיעור</label>
-      <input id="inp-lesson" value="${current}" placeholder="מתמטיקה, כדורגל...">
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
-      <button type="button" class="btn btn-small" style="background:#e2e8f0;color:#475569" onclick="document.getElementById('inp-lesson').value='🏀 כדורסל'">🏀</button>
-      <button type="button" class="btn btn-small" style="background:#e2e8f0;color:#475569" onclick="document.getElementById('inp-lesson').value='⚽ כדורגל'">⚽</button>
-      <button type="button" class="btn btn-small" style="background:#e2e8f0;color:#475569" onclick="document.getElementById('inp-lesson').value='🎾 טניס'">🎾</button>
-      <button type="button" class="btn btn-small" style="background:#e2e8f0;color:#475569" onclick="document.getElementById('inp-lesson').value='🏃 הישרדות'">🏃</button>
-      <button type="button" class="btn btn-small" style="background:#e2e8f0;color:#475569" onclick="document.getElementById('inp-lesson').value='💼 עבודה'">💼</button>
-    </div>
-    <div class="form-actions">
-      <button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button>
-      ${current ? `<button class="btn btn-danger" onclick="deleteLesson('${memberId}',${day},'${time}')">🗑️</button>` : ''}
-      <button class="btn btn-primary" onclick="saveLesson('${memberId}',${day},'${time}')">💾 שמור</button>
-    </div>
-  `;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
+function renderShop(){
+  const items=D.shopping||[];
+  const filtered=shopCat==='all'?items:items.filter(s=>s.cat===shopCat);
+  const pending=filtered.filter(s=>!s.done),done=filtered.filter(s=>s.done);
+  const counts={};SHOP_CATS.forEach(c=>counts[c.id]=c.id==='all'?items.filter(s=>!s.done).length:items.filter(s=>s.cat===c.id&&!s.done).length);
+  return `<div class="header"><h1>🛒 רשימת קניות</h1></div>
+<div class="card"><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" class="form-input" id="quick-shop" placeholder="הוסף פריט..." onkeypress="if(event.key==='Enter')quickShop()" style="flex:1"><button class="btn btn-primary" onclick="quickShop()">+</button></div>
+<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px">${SHOP_CATS.map(c=>`<div class="tab ${shopCat===c.id?'active':''}" onclick="shopCat='${c.id}';render()">${c.icon}${counts[c.id]?` (${counts[c.id]})`:''}</div>`).join('')}</div></div>
+<div class="card">${!pending.length&&!done.length?'<div class="empty"><span class="emoji">🛒</span>ריק</div>':''}${pending.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}${done.length?`<div class="divider"></div><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:8px">נקנו (${done.length})</div>${done.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}<button class="btn btn-small btn-outline" onclick="D.shopping=D.shopping.filter(s=>!s.done);save();render()">🗑️ נקה</button>`:''}</div>
+<button class="btn btn-primary btn-fab" onclick="openAddShop()">+</button>`;}
 
-function saveLesson(memberId, day, time) {
-  const val = document.getElementById('inp-lesson').value.trim();
-  if(!data.schedules) data.schedules = {};
-  if(!data.schedules[memberId]) data.schedules[memberId] = {};
-  if(!data.schedules[memberId][day]) data.schedules[memberId][day] = [];
-  const idx = data.schedules[memberId][day].findIndex(l => l.t === time);
-  if(val) {
-    if(idx >= 0) data.schedules[memberId][day][idx].s = val;
-    else { data.schedules[memberId][day].push({t: time, s: val}); data.schedules[memberId][day].sort((a,b) => a.t.localeCompare(b.t)); }
-  } else if(idx >= 0) data.schedules[memberId][day].splice(idx, 1);
-  saveToFirebase();
-  closeModal();
-  render();
-}
+function renderShopItem(s,idx){const c=SHOP_CATS.find(x=>x.id===s.cat)||SHOP_CATS[1];return `<div class="item-row ${s.done?'done':''}"><div class="item-check ${s.done?'done':''}" onclick="D.shopping[${idx}].done=!D.shopping[${idx}].done;save();render()">${s.done?'✓':''}</div><div style="flex:1"><div class="item-text ${s.done?'done':''}">${s.name}</div><div class="item-meta">${c.icon} ${c.name}${s.qty?' • '+s.qty:''}</div></div><button class="item-delete" onclick="D.shopping.splice(${idx},1);save();render()">🗑️</button></div>`;}
 
-function deleteLesson(memberId, day, time) {
-  if(!data.schedules?.[memberId]?.[day]) return;
-  const idx = data.schedules[memberId][day].findIndex(l => l.t === time);
-  if(idx >= 0) { data.schedules[memberId][day].splice(idx, 1); saveToFirebase(); }
-  closeModal();
-  render();
-}
+function quickShop(){const i=document.getElementById('quick-shop'),n=i.value.trim();if(!n)return;if(!D.shopping)D.shopping=[];D.shopping.push({id:Date.now(),name:n,cat:'food',done:false});i.value='';save();render();}
+function openAddShop(){modal('🛒 הוסף פריט',`<div class="form-group"><label>שם</label><input class="form-input" id="s-name"></div><div class="form-group"><label>קטגוריה</label><select class="form-select" id="s-cat">${SHOP_CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div><div class="form-group"><label>כמות</label><input class="form-input" id="s-qty" placeholder="2 ק״ג..."></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveShop()">הוסף</button></div>`);}
+function saveShop(){const n=document.getElementById('s-name').value.trim();if(!n)return alert('נא שם');if(!D.shopping)D.shopping=[];D.shopping.push({id:Date.now(),name:n,cat:document.getElementById('s-cat').value,qty:document.getElementById('s-qty').value.trim(),done:false});save();closeModal();render();}
 
-function renderTasksPage() {
-  return `
-    <div class="header"><h1>✅ מטלות</h1></div>
-    ${!isAdmin ? '<div class="view-only-notice"><span>✅</span><span>ניתן לסמן ביצוע משימות - רק מנהל יכול להוסיף/למחוק</span></div>' : ''}
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div class="card-title" style="margin:0"><span class="emoji">📋</span> כל המטלות</div>
-        ${isAdmin ? `<button class="btn btn-primary btn-small" onclick="openModal('task')">➕ הוסף</button>` : ''}
-      </div>
-      ${(data.tasks||[]).length === 0 ? '<div class="empty"><span class="emoji">🎉</span>אין מטלות!</div>' : `
-        ${(data.tasks||[]).map((t,i) => {
-          const m = FAMILY.find(x => x.id === t.kid);
-          return `
-            <div class="task-item" style="border-right:4px solid ${m?.color || '#ccc'}">
-              <div class="task-check ${t.done?'done':''}" style="border-color:${m?.color}" onclick="toggleTask(${i})">${t.done?'✓':''}</div>
-              <div class="task-text ${t.done?'done':''}">${t.text}<br><small style="color:#94a3b8">${m?.icon||''} ${m?.name?.split(' ')[0]||''}</small></div>
-              <span class="task-badge" style="background:${m?.color}20;color:${m?.color}">${t.freq}</span>
-              ${isAdmin ? `<button class="task-delete" onclick="deleteTask(${i})">🗑️</button>` : ''}
-            </div>
-          `;
-        }).join('')}
-      `}
-    </div>
-  `;
-}
+function renderCal(){
+  const y=calDate.getFullYear(),m=calDate.getMonth(),mName=calDate.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay(),days=last.getDate();
+  const todayStr=fmtDate(new Date());
+  const cells=[];
+  const prev=new Date(y,m,0);for(let i=start-1;i>=0;i--)cells.push({d:prev.getDate()-i,other:true});
+  for(let i=1;i<=days;i++){const dt=new Date(y,m,i),ds=fmtDate(dt),ev=(D.events||[]).filter(e=>e.date===ds);cells.push({d:i,date:ds,today:ds===todayStr,hasEv:ev.length>0,shabbat:dt.getDay()===6});}
+  const rem=42-cells.length;for(let i=1;i<=rem;i++)cells.push({d:i,other:true});
+  const selEv=selDate?(D.events||[]).filter(e=>e.date===selDate).sort((a,b)=>(a.time||'').localeCompare(b.time||'')):[];
+  return `<div class="header"><h1>📅 לוח שנה</h1></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()-1);selDate=null;render()">◀</button><div style="font-weight:700">${mName}</div><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()+1);selDate=null;render()">▶</button></div>
+<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((d,i)=>`<div style="text-align:center;font-size:0.7rem;font-weight:600;color:${i===6?'var(--primary)':'var(--text-light)'};padding:8px 0">${d}</div>`).join('')}${cells.map(c=>`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.85rem;cursor:pointer;position:relative;${c.other?'color:#cbd5e1;':c.today?'background:var(--primary);color:white;font-weight:700;':c.shabbat?'background:#f8fafc;':''}${c.date===selDate?'box-shadow:0 0 0 2px var(--primary);':''}" onclick="${c.date?`selDate='${c.date}';render()`:''}"><span>${c.d}</span>${c.hasEv?`<span style="position:absolute;bottom:4px;width:5px;height:5px;background:${c.today?'white':'var(--warning)'};border-radius:50%"></span>`:''}</div>`).join('')}</div></div>
+${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+</button></div>${!selEv.length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':selEv.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.75rem;color:var(--text-light)">${e.time||'כל היום'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div><button class="item-delete" onclick="D.events.splice(${D.events.indexOf(e)},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
+<button class="btn btn-primary btn-fab" onclick="openAddEvent()">+</button>`;}
 
-function toggleTask(i) {
-  if(!data.tasks) return;
-  data.tasks[i].done = !data.tasks[i].done;
-  saveToFirebase();
-  render();
-}
+function openAddEvent(date){const def=date||selDate||fmtDate(new Date());modal('📅 אירוע חדש',`<div class="form-group"><label>כותרת</label><input class="form-input" id="e-title"></div><div class="form-group"><label>סוג</label><select class="form-select" id="e-type">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="e-date" value="${def}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="e-time"></div></div><div class="form-group"><label>למי?</label><select class="form-select" id="e-member"><option value="">כולם</option>${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveEvent()">שמור</button></div>`);}
+function saveEvent(){const t=document.getElementById('e-title').value.trim();if(!t)return alert('נא כותרת');if(!D.events)D.events=[];D.events.push({id:Date.now(),title:t,type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,time:document.getElementById('e-time').value,member:document.getElementById('e-member').value});save();closeModal();render();}
 
-function deleteTask(i) {
-  if(!isAdmin) return;
-  if(confirm('למחוק?')) {
-    data.tasks.splice(i,1);
-    saveToFirebase();
-    render();
+function renderTasks(){
+  const tasks=D.tasks||[];
+  const pending=tasks.filter(t=>!t.done),done=tasks.filter(t=>t.done);
+  return `<div class="header"><h1>✅ משימות</h1></div>
+<div class="card"><div class="card-header"><div class="card-title">📋 משימות</div><button class="btn btn-small btn-primary" onclick="openAddTask()">+</button></div>${!pending.length?'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין</div>':pending.map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>
+${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו</div>${done.map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>`:''}
+<button class="btn btn-primary btn-fab" onclick="openAddTask()">+</button>`;}
+
+function renderTask(t,idx){const m=FAMILY.find(x=>x.id===t.kid);return `<div class="item-row" style="border-right:3px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} ${t.points?'• ⭐'+t.points:''}</div></div><button class="item-delete" onclick="D.tasks.splice(${idx},1);save();render()">🗑️</button></div>`;}
+function toggleTask(idx){const t=D.tasks[idx];t.done=!t.done;if(t.done&&t.points&&t.kid){D.points[t.kid]=(D.points[t.kid]||0)+t.points;}save();render();}
+function openAddTask(){modal('✅ משימה',`<div class="form-group"><label>משימה</label><input class="form-input" id="t-text"></div><div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="5"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>`);}
+function saveTask(){const t=document.getElementById('t-text').value.trim();if(!t)return alert('נא משימה');if(!D.tasks)D.tasks=[];D.tasks.push({id:Date.now(),text:t,kid:document.getElementById('t-kid').value,points:parseInt(document.getElementById('t-pts').value)||0,done:false});save();closeModal();render();}
+
+function renderMore(){
+  if(moreTab==='rewards')return renderRewards();
+  if(moreTab==='cars')return renderCars();
+  if(moreTab==='meals')return renderMeals();
+  if(moreTab==='workouts')return renderWorkouts();
+  if(moreTab==='grades')return renderGrades();
+  if(moreTab==='money')return renderMoney();
+  return `<div class="header"><h1>⚡ עוד</h1></div>
+<div class="more-grid">
+<div class="more-item" onclick="showEmergency()"><div class="icon">🚨</div><div class="label">חירום</div></div>
+<div class="more-item" onclick="setMoreTab('money')"><div class="icon">💰</div><div class="label">חסכונות</div></div>
+<div class="more-item" onclick="setMoreTab('rewards')"><div class="icon">🎁</div><div class="label">תגמולים</div></div>
+<div class="more-item" onclick="setMoreTab('cars')"><div class="icon">🚗</div><div class="label">רכבים</div></div>
+<div class="more-item" onclick="setMoreTab('grades')"><div class="icon">📊</div><div class="label">ציונים</div></div>
+<div class="more-item" onclick="setMoreTab('meals')"><div class="icon">🍽️</div><div class="label">ארוחות</div></div>
+<div class="more-item" onclick="setMoreTab('workouts')"><div class="icon">🏃</div><div class="label">אימונים</div></div>
+</div>`;}
+
+function showEmergency(){modal('🚨 חירום',`${(D.emergency?.contacts||[]).map(c=>`<a href="tel:${c.phone}" style="display:flex;align-items:center;gap:12px;padding:16px;background:#fee2e2;border-radius:12px;margin-bottom:8px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">${c.icon}</span><div><div style="font-weight:700">${c.name}</div><div style="font-size:1.2rem;color:var(--danger)">${c.phone}</div></div></a>`).join('')}`,'admin');}
+
+function renderMoney(){
+  return `<div class="header"><h1>💰 חסכונות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+${KIDS.map(k=>`<div class="kid-card" style="border-color:${k.color}">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+<div class="member-${k.id}" style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem">${k.icon}</div>
+<div style="flex:1"><div style="font-size:1.3rem;font-weight:700">${k.name}</div><div style="color:var(--text-light)">⭐ ${D.points?.[k.id]||0} נקודות</div></div>
+<div style="text-align:left"><div style="font-size:1.8rem;font-weight:700;color:var(--success)">₪${D.money?.[k.id]||0}</div></div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-small btn-success" style="flex:1" onclick="changeMoney('${k.id}',1)">+ הוסף</button>
+<button class="btn btn-small btn-danger" style="flex:1" onclick="changeMoney('${k.id}',-1)">- הורד</button>
+</div>
+</div>`).join('')}`;}
+
+function changeMoney(kid,dir){
+  const amt=prompt(dir>0?'סכום להוספה:':'סכום להורדה:');
+  if(amt&&!isNaN(amt)){
+    if(!D.money)D.money={};
+    D.money[kid]=(D.money[kid]||0)+(parseInt(amt)*dir);
+    save();render();
   }
 }
 
-function renderSavingsPage() {
-  return `
-    <div class="header"><h1>💰 חסכונות</h1></div>
-    ${!isAdmin ? '<div class="view-only-notice"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>' : ''}
-    ${KIDS.map(k => `
-      <div class="savings-card" style="background:linear-gradient(135deg, ${k.color}30, ${k.color}10)">
-        <div class="savings-icon">${k.icon}</div>
-        <div class="savings-info"><div class="savings-name">${k.name}</div><div class="savings-grade">${k.grade === 'גן' ? 'גן חובה' : 'כיתה ' + k.grade}</div></div>
-        <div class="savings-amount" style="color:${k.color}">₪${data.money?.[k.id] || 0}</div>
-        <div class="savings-actions">
-          <button class="savings-btn add" onclick="addMoney('${k.id}')" ${!isAdmin?'disabled':''}>+</button>
-          <button class="savings-btn sub" onclick="subMoney('${k.id}')" ${!isAdmin?'disabled':''}>-</button>
-        </div>
-      </div>
-      ${(data.history?.[k.id]||[]).length > 0 ? `<div style="margin:-10px 0 16px 0;padding:0 16px">${(data.history[k.id]||[]).slice(-3).reverse().map(h => `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.5);border-radius:8px;margin-top:4px;font-size:0.85rem"><span>${h.note}</span><span style="color:${h.amount>0?'#10b981':'#ef4444'};font-weight:600">${h.amount>0?'+':''}₪${h.amount}</span></div>`).join('')}</div>` : ''}
-    `).join('')}
-  `;
+function renderRewards(){
+  const rewards=(D.rewards||[]).filter(r=>r.type==='bonus');
+  const punishments=(D.rewards||[]).filter(r=>r.type==='punish');
+  return `<div class="header"><h1>🎁 תגמולים וקנסות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="card">
+<div class="card-header"><div class="card-title">🎁 בונוסים</div><button class="btn btn-small btn-success" onclick="openAddReward('bonus')">+ הוסף</button></div>
+${!rewards.length?'<div class="empty" style="padding:20px">אין בונוסים</div>':rewards.map((r,i)=>{
+  const k=FAMILY.find(x=>x.id===r.kid);
+  const t=REWARD_TYPES.find(x=>x.id===r.rewardType)||REWARD_TYPES[0];
+  return `<div class="reward-card bonus"><span style="font-size:1.5rem">${t.icon}</span><div style="flex:1"><div style="font-weight:600">${r.desc||t.name}</div><div class="item-meta">${k?k.icon+' '+k.short:''} ${r.value?'• '+r.value:''}</div></div><button class="item-delete" onclick="D.rewards.splice(${D.rewards.indexOf(r)},1);save();render()">🗑️</button></div>`;
+}).join('')}
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">⚠️ קנסות</div><button class="btn btn-small btn-danger" onclick="openAddReward('punish')">+ הוסף</button></div>
+${!punishments.length?'<div class="empty" style="padding:20px">אין קנסות</div>':punishments.map((r,i)=>{
+  const k=FAMILY.find(x=>x.id===r.kid);
+  const t=PUNISH_TYPES.find(x=>x.id===r.punishType)||PUNISH_TYPES[0];
+  return `<div class="reward-card punish"><span style="font-size:1.5rem">${t.icon}</span><div style="flex:1"><div style="font-weight:600">${r.desc||t.name}</div><div class="item-meta">${k?k.icon+' '+k.short:''} ${r.value?'• '+r.value:''} ${r.active?'<span class="badge badge-danger">פעיל</span>':''}</div></div>
+<button class="btn btn-small ${r.active?'btn-outline':'btn-warning'}" onclick="D.rewards[${D.rewards.indexOf(r)}].active=!D.rewards[${D.rewards.indexOf(r)}].active;save();render()">${r.active?'סיים':'הפעל'}</button>
+<button class="item-delete" onclick="D.rewards.splice(${D.rewards.indexOf(r)},1);save();render()">🗑️</button></div>`;
+}).join('')}
+</div>`;}
+
+function openAddReward(type){
+  const isBonus=type==='bonus';
+  modal(isBonus?'🎁 בונוס חדש':'⚠️ קנס חדש',`
+<div class="form-group"><label>ילד</label><select class="form-select" id="r-kid">${KIDS.map(k=>`<option value="${k.id}">${k.icon} ${k.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>סוג</label><select class="form-select" id="r-type">${(isBonus?REWARD_TYPES:PUNISH_TYPES).map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>תיאור</label><input class="form-input" id="r-desc" placeholder="${isBonus?'פיצה עם חברים':'ללא טלפון'}"></div>
+<div class="form-group"><label>ערך/משך</label><input class="form-input" id="r-value" placeholder="${isBonus?'₪50':'שעתיים'}"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn ${isBonus?'btn-success':'btn-danger'}" onclick="saveReward('${type}')">הוסף</button></div>`,isBonus?'success':'admin');
 }
 
-function addMoney(kidId) {
-  if(!isAdmin) return;
-  const k = KIDS.find(x => x.id === kidId);
-  document.getElementById('modal-header').className = 'modal-header admin';
-  document.getElementById('modal-title').textContent = `💰 הפקדה - ${k.name}`;
-  document.getElementById('modal-body').innerHTML = `
-    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money?.[kidId] || 0}</div></div>
-    <div class="form-group"><label>סכום</label><input id="inp-amount" type="number" placeholder="50"></div>
-    <div class="form-group"><label>הערה</label><input id="inp-note" placeholder="דמי כיס..."></div>
-    <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-success" onclick="saveMoney('${kidId}',1)">💵 הפקד</button></div>
-  `;
-  document.getElementById('modal-overlay').classList.remove('hidden');
+function saveReward(type){
+  if(!D.rewards)D.rewards=[];
+  const r={
+    id:Date.now(),
+    type,
+    kid:document.getElementById('r-kid').value,
+    desc:document.getElementById('r-desc').value.trim(),
+    value:document.getElementById('r-value').value.trim(),
+    active:type==='punish'
+  };
+  r[type==='bonus'?'rewardType':'punishType']=document.getElementById('r-type').value;
+  D.rewards.push(r);
+  save();closeModal();render();
 }
 
-function subMoney(kidId) {
-  if(!isAdmin) return;
-  const k = KIDS.find(x => x.id === kidId);
-  document.getElementById('modal-header').className = 'modal-header admin';
-  document.getElementById('modal-title').textContent = `💸 משיכה - ${k.name}`;
-  document.getElementById('modal-body').innerHTML = `
-    <div style="text-align:center;margin-bottom:20px"><span style="font-size:4rem">${k.icon}</span><div style="font-size:1.5rem;font-weight:700;margin-top:8px;color:${k.color}">₪${data.money?.[kidId] || 0}</div></div>
-    <div class="form-group"><label>סכום</label><input id="inp-amount" type="number" placeholder="20"></div>
-    <div class="form-group"><label>סיבה</label><input id="inp-note" placeholder="קניתי..."></div>
-    <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-danger" onclick="saveMoney('${kidId}',-1)">💸 משיכה</button></div>
-  `;
-  document.getElementById('modal-overlay').classList.remove('hidden');
+function renderCars(){
+  return `<div class="header"><h1>🚗 רכבים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+${(D.cars||[]).map((c,i)=>`<div class="car-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<div style="font-size:1.2rem;font-weight:700">🚗 ${c.name}</div>
+<button class="btn btn-small btn-primary" onclick="editCar(${i})">✏️ ערוך</button>
+</div>
+<div class="car-stat"><span>מספר רכב</span><strong>${c.plate||'לא הוזן'}</strong></div>
+<div class="car-stat"><span>ק״מ</span><strong>${c.km?c.km.toLocaleString():'0'}</strong></div>
+<div class="car-stat"><span>טיפול אחרון</span><strong>${c.lastService||'-'}</strong></div>
+<div class="car-stat"><span>טיפול הבא</span><strong>${c.nextService||'-'}</strong></div>
+<div class="car-stat"><span>טסט</span><strong>${c.test||'-'}</strong></div>
+<div class="car-stat"><span>ביטוח עד</span><strong>${c.insurance||'-'}</strong></div>
+<div class="car-stat"><span>חברה מבטחת</span><strong>${c.insuranceCompany||'-'}</strong></div>
+</div>`).join('')}`;}
+
+function editCar(idx){
+  const c=D.cars[idx];
+  modal('🚗 עריכת '+c.name,`
+<div class="form-group"><label>שם הרכב</label><input class="form-input" id="c-name" value="${c.name||''}"></div>
+<div class="form-group"><label>מספר רכב</label><input class="form-input" id="c-plate" value="${c.plate||''}" placeholder="12-345-67"></div>
+<div class="form-group"><label>ק״מ נוכחי</label><input type="number" class="form-input" id="c-km" value="${c.km||0}"></div>
+<div class="form-row">
+<div class="form-group"><label>טיפול אחרון</label><input type="date" class="form-input" id="c-last" value="${c.lastService||''}"></div>
+<div class="form-group"><label>טיפול הבא</label><input type="date" class="form-input" id="c-next" value="${c.nextService||''}"></div>
+</div>
+<div class="form-group"><label>טסט</label><input type="date" class="form-input" id="c-test" value="${c.test||''}"></div>
+<div class="form-row">
+<div class="form-group"><label>ביטוח עד</label><input type="date" class="form-input" id="c-ins" value="${c.insurance||''}"></div>
+<div class="form-group"><label>חברה מבטחת</label><input class="form-input" id="c-comp" value="${c.insuranceCompany||''}"></div>
+</div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveCar(${idx})">שמור</button></div>`);
 }
 
-function saveMoney(kidId, dir) {
-  if(!isAdmin) return;
-  const amount = parseInt(document.getElementById('inp-amount').value) || 0;
-  const note = document.getElementById('inp-note').value || (dir > 0 ? 'הפקדה' : 'משיכה');
-  if(amount <= 0) return alert('נא להזין סכום');
-  if(!data.money) data.money = {};
-  if(!data.history) data.history = {};
-  data.money[kidId] = (data.money[kidId] || 0) + (amount * dir);
-  if(!data.history[kidId]) data.history[kidId] = [];
-  data.history[kidId].push({amount: amount * dir, note, date: new Date().toISOString()});
-  saveToFirebase();
-  closeModal();
-  render();
-}
-
-function renderRewardsPage() {
-  return `
-    <div class="header"><h1>⭐ כוכבים ובונוסים</h1></div>
-    ${!isAdmin ? '<div class="view-only-notice"><span>👁️</span><span>מצב צפייה בלבד - התחבר כמנהל לעריכה</span></div>' : ''}
-    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
-      <button class="btn btn-success" onclick="openModal('reward')" ${!isAdmin?'disabled':''}>🎁 בונוס</button>
-      <button class="btn btn-danger" onclick="openModal('punish')" ${!isAdmin?'disabled':''}>⚠️ עונש</button>
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="emoji">🎁</span> בונוסים</div>
-      ${(data.rewards||[]).filter(r=>r.type==='reward').length === 0 ? '<div class="empty"><span class="emoji">🌟</span>אין בונוסים</div>' : `
-        ${(data.rewards||[]).filter(r=>r.type==='reward').map((r,i) => {
-          const m = FAMILY.find(x => x.id === r.kid); const idx = (data.rewards||[]).indexOf(r);
-          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#d1fae520,#a7f3d020)"><span style="font-size:1.5rem">${m?.icon||'🎁'}</span><div class="task-text">${r.reason}<br><small style="color:#10b981;font-weight:600">${r.val}</small></div>${isAdmin?`<button class="task-delete" onclick="deleteReward(${idx})">🗑️</button>`:''}</div>`;
-        }).join('')}
-      `}
-    </div>
-    <div class="card">
-      <div class="card-title"><span class="emoji">⚠️</span> עונשים</div>
-      ${(data.rewards||[]).filter(r=>r.type==='punish').length === 0 ? '<div class="empty"><span class="emoji">😇</span>אין עונשים!</div>' : `
-        ${(data.rewards||[]).filter(r=>r.type==='punish').map((r,i) => {
-          const m = FAMILY.find(x => x.id === r.kid); const idx = (data.rewards||[]).indexOf(r);
-          return `<div class="task-item" style="border-right:4px solid ${m?.color};background:linear-gradient(135deg,#fee2e220,#fecaca20);opacity:${r.active?1:0.5}"><span style="font-size:1.5rem">${m?.icon||'⚠️'}</span><div class="task-text">${r.reason}<br><small style="color:#ef4444;font-weight:600">${r.val}</small></div>${isAdmin?`<button class="task-badge" style="cursor:pointer;border:none;background:${r.active?'#fee2e2':'#dcfce7'};color:${r.active?'#ef4444':'#10b981'}" onclick="togglePunish(${idx})">${r.active?'פעיל':'הסתיים'}</button><button class="task-delete" onclick="deleteReward(${idx})">🗑️</button>`:''}</div>`;
-        }).join('')}
-      `}
-    </div>
-  `;
-}
-
-function openModal(type) {
-  if(['task', 'reward', 'punish'].includes(type) && !isAdmin) { showLock(); return; }
-  let html = '';
-  const isAdminModal = ['task', 'reward', 'punish'].includes(type);
-  document.getElementById('modal-header').className = isAdminModal ? 'modal-header admin' : 'modal-header';
+function saveCar(idx){
+  const c=D.cars[idx];
+  c.name=document.getElementById('c-name').value;
+  c.plate=document.getElementById('c-plate').value;
+  c.km=parseInt(document.getElementById('c-km').value)||0;
+  c.lastService=document.getElementById('c-last').value;
+  c.nextService=document.getElementById('c-next').value;
+  c.test=document.getElementById('c-test').value;
+  c.insurance=document.getElementById('c-ins').value;
+  c.insuranceCompany=document.getElementById('c-comp').value;
   
-  if(type === 'task') {
-    document.getElementById('modal-title').textContent = '➕ מטלה חדשה';
-    html = `<div class="form-group"><label>למי?</label><select id="inp-kid">${FAMILY.map(m => `<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>מטלה</label><input id="inp-text" placeholder="לסדר חדר..."></div>
-      <div class="form-group"><label>תדירות</label><select id="inp-freq"><option value="יומי">יומי</option><option value="שבועי">שבועי</option><option value="חד פעמי">חד פעמי</option></select></div>
-      <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="addTask()">✅ הוסף</button></div>`;
-  } else if(type === 'exam') {
-    document.getElementById('modal-title').textContent = '📝 מבחן חדש';
-    html = `<div class="form-group"><label>ילד/ה</label><select id="inp-kid">${KIDS.filter(k=>k.sch).map(k => `<option value="${k.id}">${k.icon} ${k.name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>מקצוע</label><input id="inp-subj" placeholder="מתמטיקה..."></div>
-      <div class="form-group"><label>תאריך</label><input id="inp-date" type="date"></div>
-      <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-warning" onclick="addExam()">📝 הוסף</button></div>`;
-  } else if(type === 'event') {
-    document.getElementById('modal-title').textContent = '🎯 אירוע חדש';
-    html = `<div class="form-group"><label>למי?</label><select id="inp-kid"><option value="">כל המשפחה</option>${FAMILY.map(m => `<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>סוג</label><select id="inp-etype"><option value="חוג">🎨 חוג</option><option value="טיול">🚗 טיול</option><option value="חגיגה">🎉 חגיגה</option><option value="אחר">📌 אחר</option></select></div>
-      <div class="form-group"><label>כותרת</label><input id="inp-title" placeholder="שם האירוע"></div>
-      <div class="form-group"><label>תאריך</label><input id="inp-date" type="date"></div>
-      <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="addEvent()">🎯 הוסף</button></div>`;
-  } else if(type === 'reward') {
-    document.getElementById('modal-title').textContent = '🎁 בונוס';
-    html = `<div class="form-group"><label>ילד/ה</label><select id="inp-kid">${KIDS.map(k => `<option value="${k.id}">${k.icon} ${k.name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>סוג</label><select id="inp-rtype"><option value="כסף">💰 כסף</option><option value="פינוק">🍦 פינוק</option><option value="זמן מסך">📱 זמן מסך</option></select></div>
-      <div class="form-group"><label>ערך</label><input id="inp-val" placeholder="50₪ / גלידה..."></div>
-      <div class="form-group"><label>על מה?</label><input id="inp-reason" placeholder="ציון טוב..."></div>
-      <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-success" onclick="addReward()">🎁 הוסף</button></div>`;
-  } else if(type === 'punish') {
-    document.getElementById('modal-title').textContent = '⚠️ עונש';
-    html = `<div class="form-group"><label>ילד/ה</label><select id="inp-kid">${KIDS.map(k => `<option value="${k.id}">${k.icon} ${k.name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>סוג</label><select id="inp-ptype"><option value="קנס">💸 קנס</option><option value="איסור טלפון">📵 איסור טלפון</option><option value="איסור משחקים">🎮 איסור משחקים</option></select></div>
-      <div class="form-group"><label>משך/ערך</label><input id="inp-val" placeholder="שעתיים / 20₪..."></div>
-      <div class="form-group"><label>סיבה</label><input id="inp-reason" placeholder="לא עשה שיעורים..."></div>
-      <div class="form-actions"><button class="btn" style="background:#e2e8f0;color:#475569" onclick="closeModal()">ביטול</button><button class="btn btn-danger" onclick="addPunish()">⚠️ הוסף</button></div>`;
+  // Add to calendar
+  if(c.nextService){
+    if(!D.events)D.events=[];
+    const exists=D.events.find(e=>e.autoId==='car-service-'+c.id);
+    if(exists)D.events.splice(D.events.indexOf(exists),1);
+    D.events.push({id:Date.now(),title:'טיפול '+c.name,type:'car',date:c.nextService,time:'09:00',member:'',autoId:'car-service-'+c.id});
   }
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
-
-function addTask() {
-  if(!isAdmin) return;
-  const kid = document.getElementById('inp-kid').value;
-  const text = document.getElementById('inp-text').value;
-  const freq = document.getElementById('inp-freq').value;
-  if(!text) return alert('נא להזין מטלה');
-  if(!data.tasks) data.tasks = [];
-  data.tasks.push({id: Date.now(), kid, text, freq, done:false});
-  saveToFirebase();
-  closeModal();
-  render();
-}
-
-function addExam() {
-  const kid = document.getElementById('inp-kid').value;
-  const subj = document.getElementById('inp-subj').value;
-  const date = document.getElementById('inp-date').value;
-  if(!subj || !date) return alert('נא למלא הכל');
-  if(!data.exams) data.exams = [];
-  data.exams.push({kid, subj, date, icon:'📝', type:'exam'});
-  saveToFirebase();
-  closeModal();
-  render();
-}
-
-function addEvent() {
-  const kid = document.getElementById('inp-kid').value;
-  const eventType = document.getElementById('inp-etype').value;
-  const title = document.getElementById('inp-title').value;
-  const date = document.getElementById('inp-date').value;
-  if(!title || !date) return alert('נא למלא הכל');
-  const icons = {חוג:'🎨', טיול:'🚗', חגיגה:'🎉', אחר:'📌'};
-  if(!data.events) data.events = [];
-  data.events.push({kid, eventType, title, date, icon: icons[eventType]});
-  saveToFirebase();
-  closeModal();
-  render();
-}
-
-function addReward() {
-  if(!isAdmin) return;
-  const kid = document.getElementById('inp-kid').value;
-  const val = document.getElementById('inp-val').value;
-  const reason = document.getElementById('inp-reason').value;
-  if(!val || !reason) return alert('נא למלא הכל');
-  if(!data.rewards) data.rewards = [];
-  data.rewards.push({kid, val, reason, type:'reward'});
-  if(document.getElementById('inp-rtype').value === 'כסף') {
-    const amt = parseInt(val) || 0;
-    if(!data.money) data.money = {};
-    if(!data.history) data.history = {};
-    data.money[kid] = (data.money[kid]||0) + amt;
-    if(!data.history[kid]) data.history[kid] = [];
-    data.history[kid].push({amount:amt, note:'בונוס: '+reason, date:new Date().toISOString()});
+  if(c.test){
+    const exists=D.events.find(e=>e.autoId==='car-test-'+c.id);
+    if(exists)D.events.splice(D.events.indexOf(exists),1);
+    D.events.push({id:Date.now(),title:'טסט '+c.name,type:'car',date:c.test,time:'09:00',member:'',autoId:'car-test-'+c.id});
   }
-  saveToFirebase();
-  closeModal();
-  render();
+  
+  save();closeModal();render();
 }
 
-function addPunish() {
-  if(!isAdmin) return;
-  const kid = document.getElementById('inp-kid').value;
-  const val = document.getElementById('inp-val').value;
-  const reason = document.getElementById('inp-reason').value;
-  if(!val || !reason) return alert('נא למלא הכל');
-  if(!data.rewards) data.rewards = [];
-  data.rewards.push({kid, val, reason, type:'punish', active:true});
-  if(document.getElementById('inp-ptype').value === 'קנס') {
-    const amt = parseInt(val) || 0;
-    if(!data.money) data.money = {};
-    if(!data.history) data.history = {};
-    data.money[kid] = (data.money[kid]||0) - amt;
-    if(!data.history[kid]) data.history[kid] = [];
-    data.history[kid].push({amount:-amt, note:'קנס: '+reason, date:new Date().toISOString()});
-  }
-  saveToFirebase();
-  closeModal();
-  render();
-}
+function renderMeals(){
+  return `<div class="header"><h1>🍽️ תפריט שבועי</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="card">${DAYS.map((day,di)=>`<div style="padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px">
+<div style="font-weight:600;font-size:0.9rem;margin-bottom:8px">${day}</div>
+<div style="display:flex;gap:6px;overflow-x:auto">${MEALS.map(meal=>{
+  const key=di+'-'+meal;
+  const items=D.meals?.[key]||[];
+  const count=items.length;
+  return `<div style="background:${count?'var(--primary)':'white'};color:${count?'white':'var(--text)'};border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.75rem;cursor:pointer;min-width:80px;text-align:center;flex:1" onclick="editMeal(${di},'${meal}')">
+<div style="font-weight:600">${meal}</div>
+${count?`<div style="font-size:0.65rem;opacity:0.9;margin-top:2px">${count} פריטים</div>`:'<div style="font-size:0.65rem;opacity:0.7;margin-top:2px">+ הוסף</div>'}
+</div>`;
+}).join('')}</div>
+</div>`).join('')}</div>`;}
 
-function deleteReward(i) {
-  if(!isAdmin) return;
-  if(confirm('למחוק?')) {
-    data.rewards.splice(i,1);
-    saveToFirebase();
-    render();
-  }
-}
-
-function deleteEvent(type, idx) {
-  if(confirm('למחוק?')) {
-    if(type === 'exam') {
-      data.exams.splice(idx, 1);
-    } else {
-      data.events.splice(idx, 1);
+function editMeal(day,meal){
+  const key=day+'-'+meal;
+  if(!D.meals)D.meals={};
+  if(!D.meals[key])D.meals[key]=[];
+  const items=D.meals[key];
+  
+  let itemsHtml='';
+  if(items.length){
+    for(let i=0;i<items.length;i++){
+      const item=items[i];
+      const m=FAMILY.find(x=>x.id===item.who);
+      const mName=m?m.icon+' '+m.short:'👨‍👩‍👧‍👦 כולם';
+      itemsHtml+='<div class="item-row"><div style="flex:1"><div style="font-weight:600">'+item.name+'</div><div class="item-meta">'+mName+'</div></div><button class="btn btn-small btn-danger" onclick="removeMealItem('+day+',\''+meal+'\','+i+')">🗑️</button></div>';
     }
-    saveToFirebase();
-    render();
+  }else{
+    itemsHtml='<div class="empty" style="padding:20px"><span class="emoji">🍽️</span>אין פריטים</div>';
+  }
+  
+  const formHtml='<div style="margin-bottom:16px">'+itemsHtml+'</div><div class="divider"></div><div style="font-weight:600;margin-bottom:12px">➕ הוסף פריט:</div><div class="form-group"><label>מה לאכול?</label><input class="form-input" id="meal-name" placeholder="חביתה, טוסט, סלט..."></div><div class="form-group"><label>למי?</label><select class="form-select" id="meal-who"><option value="all">👨‍👩‍👧‍👦 כל המשפחה</option>'+FAMILY.map(function(m){return '<option value="'+m.id+'">'+m.icon+' '+m.name+'</option>';}).join('')+'</select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal();render();">סגור</button><button class="btn btn-primary" onclick="saveMealItem('+day+',\''+meal+'\');">הוסף פריט</button></div>';
+  
+  modal('🍽️ '+DAYS[day]+' - ארוחת '+meal, formHtml);
+}
+
+function saveMealItem(day,meal){
+  const key=day+'-'+meal;
+  const nameEl=document.getElementById('meal-name');
+  const whoEl=document.getElementById('meal-who');
+  if(!nameEl){alert('שגיאה - לא נמצא שדה');return;}
+  const name=nameEl.value.trim();
+  const who=whoEl?whoEl.value:'all';
+  if(!name){alert('נא להזין מה לאכול');return;}
+  
+  if(!D.meals)D.meals={};
+  if(!D.meals[key])D.meals[key]=[];
+  D.meals[key].push({name:name,who:who});
+  save();
+  closeModal();
+  setTimeout(function(){editMeal(day,meal);},200);
+}
+
+function removeMealItem(day,meal,idx){
+  const key=day+'-'+meal;
+  if(D.meals&&D.meals[key]){
+    D.meals[key].splice(idx,1);
+    save();
+    closeModal();
+    setTimeout(function(){editMeal(day,meal);},200);
   }
 }
 
-function togglePunish(i) {
-  if(!isAdmin) return;
-  data.rewards[i].active = !data.rewards[i].active;
-  saveToFirebase();
-  render();
+function renderWorkouts(){
+  const workouts=D.workouts||[];
+  return `<div class="header"><h1>🏃 אימונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="card">
+<div class="card-header"><div class="card-title">🏃 אימונים שבועיים</div><button class="btn btn-small btn-primary" onclick="openAddWorkout()">+ הוסף</button></div>
+${!workouts.length?'<div class="empty" style="padding:20px">אין אימונים</div>':workouts.map((w,i)=>{
+  const m=FAMILY.find(x=>x.id===w.member);
+  return `<div class="item-row" style="border-right:3px solid #8b5cf6"><span style="font-size:1.3rem">🏃</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ${DAYS[w.day]} ${w.time}</div></div><button class="item-delete" onclick="D.workouts.splice(${i},1);save();render()">🗑️</button></div>`;
+}).join('')}
+</div>`;}
+
+function openAddWorkout(){
+  modal('🏃 אימון חדש',`
+<div class="form-group"><label>סוג אימון</label><select class="form-select" id="w-type">${WORKOUT_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+<div class="form-group"><label>מי?</label><select class="form-select" id="w-member">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-row">
+<div class="form-group"><label>יום</label><select class="form-select" id="w-day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
+<div class="form-group"><label>שעה</label><input type="time" class="form-input" id="w-time" value="07:00"></div>
+</div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveWorkout()">הוסף</button></div>`);
 }
 
-// Initialize
-updateRoleBadge();
+function saveWorkout(){
+  if(!D.workouts)D.workouts=[];
+  const w={
+    id:Date.now(),
+    activity:document.getElementById('w-type').value,
+    member:document.getElementById('w-member').value,
+    day:parseInt(document.getElementById('w-day').value),
+    time:document.getElementById('w-time').value
+  };
+  D.workouts.push(w);
+  save();closeModal();render();
+}
+
+function renderGrades(){
+  return `<div class="header"><h1>📊 ציונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+${KIDS.filter(k=>k.grade!=='גן').map(k=>{
+  const grades=D.grades?.[k.id]||[];
+  const avg=grades.length?Math.round(grades.filter(g=>g.grade).reduce((a,g)=>a+(g.grade||0),0)/grades.filter(g=>g.grade).length):0;
+  return `<div class="card">
+<div class="card-header">
+<div class="card-title"><span class="member-${k.id}" style="width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:8px">${k.icon}</span>${k.name}</div>
+<button class="btn btn-small btn-primary" onclick="openAddGrade('${k.id}')">+ הוסף</button>
+</div>
+${avg?`<div style="text-align:center;margin-bottom:12px"><span style="font-size:2rem;font-weight:700;color:${avg>=80?'var(--success)':avg>=60?'var(--warning)':'var(--danger)'}">${avg}</span><div style="font-size:0.75rem;color:var(--text-light)">ממוצע</div></div>`:''}
+${grades.length?grades.slice().reverse().slice(0,5).map(g=>`<div class="item-row" style="border-right:3px solid ${g.grade>=80?'var(--success)':g.grade>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${g.subject}</div><div class="item-meta">${g.date||''} ${g.type||''}</div></div><div style="font-size:1.3rem;font-weight:700;color:${g.grade>=80?'var(--success)':g.grade>=60?'var(--warning)':'var(--danger)'}">${g.grade||'-'}</div></div>`).join(''):'<div class="empty" style="padding:20px">אין ציונים</div>'}
+</div>`;
+}).join('')}`;}
+
+function openAddGrade(kid){
+  modal('📊 הוסף ציון',`
+<div class="form-group"><label>מקצוע</label><input class="form-input" id="g-subj"></div>
+<div class="form-group"><label>ציון</label><input type="number" class="form-input" id="g-val" min="0" max="100"></div>
+<div class="form-row">
+<div class="form-group"><label>סוג</label><select class="form-select" id="g-type"><option>מבחן</option><option>בוחן</option><option>עבודה</option></select></div>
+<div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="g-date" value="${fmtDate(new Date())}"></div>
+</div>
+<input type="hidden" id="g-kid" value="${kid}">
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveGrade()">הוסף</button></div>`);
+}
+
+function saveGrade(){
+  const kid=document.getElementById('g-kid').value;
+  if(!D.grades)D.grades={};
+  if(!D.grades[kid])D.grades[kid]=[];
+  D.grades[kid].push({
+    id:Date.now(),
+    subject:document.getElementById('g-subj').value.trim(),
+    grade:parseInt(document.getElementById('g-val').value)||null,
+    type:document.getElementById('g-type').value,
+    date:document.getElementById('g-date').value
+  });
+  save();closeModal();render();
+}
+
+function renderMember(){
+  const m=FAMILY.find(x=>x.id===member);
+  const sch=D.schedules?.[member]||{};
+  const myTasks=(D.tasks||[]).filter(t=>t.kid===member);
+  const myEvents=(D.events||[]).filter(e=>e.member===member);
+  const myWorkouts=(D.workouts||[]).filter(w=>w.member===member);
+  
+  return `<div class="header" style="padding-bottom:10px"><button onclick="member=null;render()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 14px;border-radius:8px;cursor:pointer">← חזרה</button></div>
+<div style="display:flex;align-items:center;gap:16px;padding:16px;background:white;border-radius:16px;margin-bottom:16px">
+<div class="member-${m.id}" style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem">${m.icon}</div>
+<div style="flex:1"><div style="font-size:1.2rem;font-weight:700">${m.name}</div><div style="color:var(--text-light)">${m.grade?m.grade==='גן'?'גן חובה':'כיתה '+m.grade:''}</div></div>
+${m.type==='child'?`<div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--success)">₪${D.money?.[m.id]||0}</div><div style="font-size:0.65rem;color:var(--text-light)">חיסכון</div></div>`:''}
+</div>
+
+<div class="tabs">${['schedule','tasks','events','workouts',m.type==='child'&&m.grade!=='גן'?'grades':null].filter(Boolean).map(t=>`<button class="tab ${mTab===t?'active':''}" onclick="setMTab('${t}')">${t==='schedule'?'📅 מערכת':t==='tasks'?'✅ משימות':t==='events'?'📋 אירועים':t==='workouts'?'🏃 אימונים':'📊 ציונים'}</button>`).join('')}</div>
+
+${mTab==='schedule'?`<div class="card"><div class="card-title" style="margin-bottom:12px">📅 מערכת שעות</div>
+<div style="overflow-x:auto"><table style="width:100%;min-width:500px;border-collapse:collapse;font-size:0.65rem">
+<thead><tr><th style="background:var(--primary);color:white;padding:6px;width:50px">שעה</th>${DAYS.map((d,i)=>`<th style="background:${i===6?'#94a3b8':'var(--primary)'};color:white;padding:6px">${d}</th>`).join('')}</tr></thead>
+<tbody>${TIMES.map(time=>`<tr><td style="background:#f1f5f9;padding:4px;font-weight:600;text-align:center">${time}</td>${[0,1,2,3,4,5,6].map(day=>{const l=(sch[day]||[]).find(x=>x.t===time);return `<td style="padding:3px;border:1px solid var(--border);text-align:center;cursor:pointer;${l?'background:rgba(102,126,234,0.15);font-weight:600':''}" onclick="editLesson('${member}',${day},'${time}')">${l?.s||''}</td>`;}).join('')}</tr>`).join('')}</tbody>
+</table></div></div>`:''}
+
+${mTab==='tasks'?`<div class="card"><div class="card-title" style="margin-bottom:12px">✅ המשימות שלי</div>${!myTasks.length?'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין</div>':myTasks.map(t=>renderTask(t,D.tasks.indexOf(t))).join('')}</div>`:''}
+
+${mTab==='events'?`<div class="card"><div class="card-header"><div class="card-title">📋 האירועים שלי</div><button class="btn btn-small btn-primary" onclick="openAddEventFor('${m.id}')">+</button></div>${!myEvents.filter(e=>parseDate(e.date)>=new Date()).length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':myEvents.filter(e=>parseDate(e.date)>=new Date()).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,10).map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:60px;font-size:0.75rem;color:var(--text-light)">${parseDate(e.date).toLocaleDateString('he-IL',{day:'numeric',month:'short'})}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${e.time||'כל היום'}</div></div><button class="item-delete" onclick="D.events.splice(${D.events.indexOf(e)},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
+
+${mTab==='workouts'?`<div class="card"><div class="card-header"><div class="card-title">🏃 האימונים שלי</div><button class="btn btn-small btn-primary" onclick="openAddWorkout()">+</button></div>${!myWorkouts.length?'<div class="empty" style="padding:20px">אין אימונים</div>':myWorkouts.map(w=>`<div class="item-row" style="border-right:3px solid #8b5cf6"><span style="font-size:1.3rem">🏃</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${DAYS[w.day]} ${w.time}</div></div><button class="item-delete" onclick="D.workouts.splice(${D.workouts.indexOf(w)},1);save();render()">🗑️</button></div>`).join('')}</div>`:''}
+
+${mTab==='grades'&&m.type==='child'&&m.grade!=='גן'?renderMemberGrades(m):''}`;}
+
+function renderMemberGrades(m){
+  const grades=D.grades?.[m.id]||[];
+  return `<div class="card"><div class="card-header"><div class="card-title">📊 ציונים</div><button class="btn btn-small btn-primary" onclick="openAddGrade('${m.id}')">+</button></div>
+${grades.length?grades.slice().reverse().map(g=>`<div class="item-row" style="border-right:3px solid ${(g.grade||0)>=80?'var(--success)':(g.grade||0)>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${g.subject}</div><div class="item-meta">${g.date||''}</div></div><div style="font-size:1.3rem;font-weight:700;color:${(g.grade||0)>=80?'var(--success)':(g.grade||0)>=60?'var(--warning)':'var(--danger)'}">${g.grade||'-'}</div></div>`).join(''):'<div class="empty" style="padding:20px">אין</div>'}
+</div>`;
+}
+
+function openAddEventFor(mid){openAddEvent();setTimeout(()=>{document.getElementById('e-member').value=mid;},100);}
+
+function editLesson(mid,day,time){
+  const sch=D.schedules?.[mid]?.[day]||[];
+  const cur=sch.find(l=>l.t===time)?.s||'';
+  modal(`${DAYS[day]} ${time}`,`
+<div class="form-group"><label>שיעור/פעילות</label><input class="form-input" id="l-text" value="${cur}"></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">${['🏀 כדורסל','⚽ כדורגל','🎾 טניס','🏃 הישרדות','💼 עבודה'].map(x=>`<button class="btn btn-small btn-outline" type="button" onclick="document.getElementById('l-text').value='${x}'">${x.split(' ')[0]}</button>`).join('')}</div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button>${cur?`<button class="btn btn-danger" onclick="deleteLesson('${mid}',${day},'${time}')">🗑️</button>`:''}<button class="btn btn-primary" onclick="saveLesson('${mid}',${day},'${time}')">שמור</button></div>`);
+}
+
+function saveLesson(mid,day,time){
+  const v=document.getElementById('l-text').value.trim();
+  if(!D.schedules)D.schedules={};
+  if(!D.schedules[mid])D.schedules[mid]={};
+  if(!D.schedules[mid][day])D.schedules[mid][day]=[];
+  const idx=D.schedules[mid][day].findIndex(l=>l.t===time);
+  if(v){
+    if(idx>=0)D.schedules[mid][day][idx].s=v;
+    else{D.schedules[mid][day].push({t:time,s:v});D.schedules[mid][day].sort((a,b)=>a.t.localeCompare(b.t));}
+  }else if(idx>=0)D.schedules[mid][day].splice(idx,1);
+  save();closeModal();render();
+}
+
+function deleteLesson(mid,day,time){
+  if(D.schedules?.[mid]?.[day]){
+    const idx=D.schedules[mid][day].findIndex(l=>l.t===time);
+    if(idx>=0)D.schedules[mid][day].splice(idx,1);
+    save();
+  }
+  closeModal();render();
+}
+
+updateBadge();
 </script>
 </body>
 </html>
