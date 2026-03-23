@@ -132,9 +132,22 @@ body{font-family:'Rubik',sans-serif;background:#f1f5f9;min-height:100vh;directio
 <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="modal-header"><span class="modal-title" id="modal-title">הוסף</span><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body" id="modal-body"></div></div></div>
 <script>
 try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){console.error(e);}
-const db=firebase.database(),dataRef=db.ref('familyDataV3');
+const db=typeof firebase!=='undefined'&&firebase.database?firebase.database():null;
+const dataRef=db?db.ref('familyDataV3'):null;
 const PIN='1234';
-const FAMILY=[{id:'avi',name:'אבא אבי',short:'אבי',icon:'👨',color:'#3b82f6',type:'parent'},{id:'ariela',name:'אמא אריאלה',short:'אריאלה',icon:'👩',color:'#ec4899',type:'parent'},{id:'oshari',name:'אושרי',short:'אושרי',icon:'👦',grade:'ד׳',color:'#10b981',type:'child'},{id:'yuval',name:'יובל',short:'יובל',icon:'👧',grade:'ו׳',color:'#8b5cf6',type:'child'},{id:'hillel',name:'הלל',short:'הלל',icon:'👧',grade:'ח׳',color:'#f59e0b',type:'child'},{id:'lior',name:'ליאור',short:'ליאור',icon:'👶',grade:'גן',color:'#06b6d4',type:'child'}];
+
+// Timeout - if Firebase doesn't load in 5 seconds, continue without it
+let firebaseLoaded=false;
+setTimeout(function(){
+  if(!firebaseLoaded){
+    console.log('Firebase timeout - loading locally');
+    document.getElementById('loading').classList.add('hidden');
+    sync('offline');
+    render();
+  }
+},5000);
+
+const FAMILY=[{id:'avi',name:'אבא אבי',short:'אבי',icon:'👨',color:'#3b82f6',type:'parent',phone:''},{id:'ariela',name:'אמא אריאלה',short:'אריאלה',icon:'👩',color:'#ec4899',type:'parent',phone:''},{id:'oshari',name:'אושרי',short:'אושרי',icon:'👦',grade:'ד׳',color:'#10b981',type:'child',phone:''},{id:'yuval',name:'יובל',short:'יובל',icon:'👧',grade:'ו׳',color:'#8b5cf6',type:'child',phone:''},{id:'hillel',name:'הלל',short:'הלל',icon:'👧',grade:'ח׳',color:'#f59e0b',type:'child',phone:''},{id:'lior',name:'ליאור',short:'ליאור',icon:'👶',grade:'גן',color:'#06b6d4',type:'child',phone:''}];
 const KIDS=FAMILY.filter(m=>m.type==='child');
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const TIMES=['05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
@@ -151,6 +164,7 @@ const DEFAULT={
   points:{oshari:0,yuval:0,hillel:0,lior:0},
   grades:{oshari:[],yuval:[],hillel:[]},
   rewards:[],
+  phones:{avi:'',ariela:'',oshari:'',yuval:'',hillel:'',lior:''},
   cars:[
     {id:'car1',name:'רכב 1',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''},
     {id:'car2',name:'רכב 2',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''}
@@ -165,9 +179,33 @@ let view='home',member=null,mTab='schedule',shopCat='all',calDate=new Date(),sel
 let homeDate=new Date();
 
 function sync(s){document.getElementById('sync-badge').className='sync-badge '+s;document.getElementById('sync-text').textContent=s==='online'?'✓':'⚠';}
-function save(){sync('syncing');dataRef.set(D).then(()=>sync('online')).catch(()=>sync('offline'));}
-dataRef.on('value',snap=>{const v=snap.val();if(v)D={...DEFAULT,...v};document.getElementById('loading').classList.add('hidden');sync('online');render();});
-dataRef.once('value').then(s=>{if(!s.val())dataRef.set(DEFAULT);});
+function save(){
+  if(!dataRef){sync('offline');return;}
+  sync('syncing');
+  dataRef.set(D).then(function(){sync('online');}).catch(function(){sync('offline');});
+}
+
+if(dataRef){
+  dataRef.on('value',function(snap){
+    firebaseLoaded=true;
+    const v=snap.val();
+    if(v)D={...DEFAULT,...v};
+    document.getElementById('loading').classList.add('hidden');
+    sync('online');
+    render();
+  },function(err){
+    console.error('Firebase error:',err);
+    firebaseLoaded=true;
+    document.getElementById('loading').classList.add('hidden');
+    sync('offline');
+    render();
+  });
+  dataRef.once('value').then(function(s){if(!s.val())dataRef.set(DEFAULT);}).catch(function(){});
+}else{
+  document.getElementById('loading').classList.add('hidden');
+  sync('offline');
+  render();
+}
 
 function nav(v){view=v;member=null;moreTab='main';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-view="${v}"]`)?.classList.add('active');render();}
 function showMember(id){member=id;mTab='schedule';render();}
@@ -234,7 +272,7 @@ function renderHome(){
 <div class="card"><div class="card-header"><div class="card-title">👨‍👩‍👧‍👦 בני המשפחה</div></div><div class="family-row">${FAMILY.map(m=>`<div class="family-avatar" onclick="showMember('${m.id}')"><div class="icon member-${m.id}">${m.icon}</div><div class="name">${m.short}</div></div>`).join('')}</div></div>
 
 ${dayEvents.length||dayWorkouts.length||sportFromSch.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">📅 לו״ז היום</div>
-${dayEvents.map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const m=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-weight:600">${e.time||'-'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${m?m.icon+' '+m.short:'כולם'}</div></div></div>`;}).join('')}
+${dayEvents.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const m=FAMILY.find(x=>x.id===e.member);const idx=D.events.indexOf(e);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-weight:600">${e.time||'-'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${m?m.icon+' '+m.short:'כולם'}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="shareToWhatsApp('event',D.events[${idx}])">📲</button></div>`;}).join('')}
 ${dayWorkouts.map(w=>{const m=FAMILY.find(x=>x.id===w.member);return `<div class="item-row" style="border-right:3px solid #8b5cf6"><div style="min-width:50px;font-weight:600">${w.time}</div><div style="flex:1"><div style="font-weight:600">🏃 ${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''}</div></div></div>`;}).join('')}
 ${sportFromSch.map(s=>`<div class="item-row" style="border-right:3px solid #3b82f6"><div style="min-width:50px;font-weight:600">${s.time}</div><div style="flex:1"><div style="font-weight:600">${s.activity}</div><div class="item-meta">${s.memberIcon} ${s.memberName} • מהמערכת</div></div></div>`).join('')}
 </div>`:'<div class="card"><div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים להיום</div></div>'}
@@ -251,10 +289,12 @@ function renderShop(){
   return `<div class="header"><h1>🛒 רשימת קניות</h1></div>
 <div class="card"><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" class="form-input" id="quick-shop" placeholder="הוסף פריט..." onkeypress="if(event.key==='Enter')quickShop()" style="flex:1"><button class="btn btn-primary" onclick="quickShop()">+</button></div>
 <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px">${SHOP_CATS.map(c=>`<div class="tab ${shopCat===c.id?'active':''}" onclick="shopCat='${c.id}';render()">${c.icon}${counts[c.id]?` (${counts[c.id]})`:''}</div>`).join('')}</div></div>
-<div class="card">${!pending.length&&!done.length?'<div class="empty"><span class="emoji">🛒</span>ריק</div>':''}${pending.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}${done.length?`<div class="divider"></div><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:8px">נקנו (${done.length})</div>${done.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}<button class="btn btn-small btn-outline" onclick="D.shopping=D.shopping.filter(s=>!s.done);save();render()">🗑️ נקה</button>`:''}</div>
+${pending.length?`<div class="card"><div class="card-header"><div class="card-title">📋 לקנות</div><button class="btn btn-small" style="background:#25D366;color:white" onclick="shareToWhatsApp('shopping',D.shopping.filter(s=>!s.done))">📲 שלח הכל</button></div>${pending.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}</div>`:''}
+${!pending.length&&!done.length?'<div class="card"><div class="empty"><span class="emoji">🛒</span>ריק</div></div>':''}
+${done.length?`<div class="card"><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:8px">נקנו (${done.length})</div>${done.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}<button class="btn btn-small btn-outline" onclick="D.shopping=D.shopping.filter(s=>!s.done);save();render()">🗑️ נקה</button></div>`:''}
 <button class="btn btn-primary btn-fab" onclick="openAddShop()">+</button>`;}
 
-function renderShopItem(s,idx){const c=SHOP_CATS.find(x=>x.id===s.cat)||SHOP_CATS[1];return `<div class="item-row ${s.done?'done':''}"><div class="item-check ${s.done?'done':''}" onclick="D.shopping[${idx}].done=!D.shopping[${idx}].done;save();render()">${s.done?'✓':''}</div><div style="flex:1"><div class="item-text ${s.done?'done':''}">${s.name}</div><div class="item-meta">${c.icon} ${c.name}${s.qty?' • '+s.qty:''}</div></div><button class="item-delete" onclick="D.shopping.splice(${idx},1);save();render()">🗑️</button></div>`;}
+function renderShopItem(s,idx){const c=SHOP_CATS.find(x=>x.id===s.cat)||SHOP_CATS[1];return `<div class="item-row ${s.done?'done':''}"><div class="item-check ${s.done?'done':''}" onclick="D.shopping[${idx}].done=!D.shopping[${idx}].done;save();render()">${s.done?'✓':''}</div><div style="flex:1"><div class="item-text ${s.done?'done':''}">${s.name}</div><div class="item-meta">${c.icon} ${c.name}${s.qty?' • '+s.qty:''}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="event.stopPropagation();shareToWhatsApp('shopping-item',D.shopping[${idx}])">📲</button><button class="item-delete" onclick="D.shopping.splice(${idx},1);save();render()">🗑️</button></div>`;}
 
 function quickShop(){const i=document.getElementById('quick-shop'),n=i.value.trim();if(!n)return;if(!D.shopping)D.shopping=[];D.shopping.push({id:Date.now(),name:n,cat:'food',done:false});i.value='';save();render();}
 function openAddShop(){modal('🛒 הוסף פריט',`<div class="form-group"><label>שם</label><input class="form-input" id="s-name"></div><div class="form-group"><label>קטגוריה</label><select class="form-select" id="s-cat">${SHOP_CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div><div class="form-group"><label>כמות</label><input class="form-input" id="s-qty" placeholder="2 ק״ג..."></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveShop()">הוסף</button></div>`);}
@@ -272,11 +312,11 @@ function renderCal(){
   return `<div class="header"><h1>📅 לוח שנה</h1></div>
 <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()-1);selDate=null;render()">◀</button><div style="font-weight:700">${mName}</div><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()+1);selDate=null;render()">▶</button></div>
 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((d,i)=>`<div style="text-align:center;font-size:0.7rem;font-weight:600;color:${i===6?'var(--primary)':'var(--text-light)'};padding:8px 0">${d}</div>`).join('')}${cells.map(c=>`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.85rem;cursor:pointer;position:relative;${c.other?'color:#cbd5e1;':c.today?'background:var(--primary);color:white;font-weight:700;':c.shabbat?'background:#f8fafc;':''}${c.date===selDate?'box-shadow:0 0 0 2px var(--primary);':''}" onclick="${c.date?`selDate='${c.date}';render()`:''}"><span>${c.d}</span>${c.hasEv?`<span style="position:absolute;bottom:4px;width:5px;height:5px;background:${c.today?'white':'var(--warning)'};border-radius:50%"></span>`:''}</div>`).join('')}</div></div>
-${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+</button></div>${!selEv.length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':selEv.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.75rem;color:var(--text-light)">${e.time||'כל היום'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div><button class="item-delete" onclick="D.events.splice(${D.events.indexOf(e)},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
+${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+</button></div>${!selEv.length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':selEv.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);const idx=D.events.indexOf(e);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.75rem;color:var(--text-light)">${e.time||'כל היום'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="shareToWhatsApp('event',D.events[${idx}])">📲</button><button class="item-delete" onclick="D.events.splice(${idx},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
 <button class="btn btn-primary btn-fab" onclick="openAddEvent()">+</button>`;}
 
-function openAddEvent(date){const def=date||selDate||fmtDate(new Date());modal('📅 אירוע חדש',`<div class="form-group"><label>כותרת</label><input class="form-input" id="e-title"></div><div class="form-group"><label>סוג</label><select class="form-select" id="e-type">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="e-date" value="${def}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="e-time"></div></div><div class="form-group"><label>למי?</label><select class="form-select" id="e-member"><option value="">כולם</option>${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveEvent()">שמור</button></div>`);}
-function saveEvent(){const t=document.getElementById('e-title').value.trim();if(!t)return alert('נא כותרת');if(!D.events)D.events=[];D.events.push({id:Date.now(),title:t,type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,time:document.getElementById('e-time').value,member:document.getElementById('e-member').value});save();closeModal();render();}
+function openAddEvent(date){const def=date||selDate||fmtDate(new Date());modal('📅 אירוע חדש',`<div class="form-group"><label>כותרת</label><input class="form-input" id="e-title"></div><div class="form-group"><label>סוג</label><select class="form-select" id="e-type">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="e-date" value="${def}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="e-time"></div></div><div class="form-group"><label>למי?</label><select class="form-select" id="e-member"><option value="">כולם</option>${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-group"><label>תזכורת וואטסאפ</label><select class="form-select" id="e-reminder"><option value="">ללא תזכורת</option><option value="0">בזמן האירוע</option><option value="15">15 דקות לפני</option><option value="30">30 דקות לפני</option><option value="60">שעה לפני</option><option value="120">שעתיים לפני</option><option value="1440">יום לפני</option></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveEvent()">שמור</button></div>`);}
+function saveEvent(){const t=document.getElementById('e-title').value.trim();if(!t)return alert('נא כותרת');if(!D.events)D.events=[];const event={id:Date.now(),title:t,type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,time:document.getElementById('e-time').value,member:document.getElementById('e-member').value,reminder:document.getElementById('e-reminder').value,reminderSent:false};D.events.push(event);if(event.reminder&&event.date&&event.time){scheduleEventReminder(event);}save();closeModal();render();}
 
 function renderTasks(){
   const tasks=D.tasks||[];
@@ -286,10 +326,10 @@ function renderTasks(){
 ${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו</div>${done.map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>`:''}
 <button class="btn btn-primary btn-fab" onclick="openAddTask()">+</button>`;}
 
-function renderTask(t,idx){const m=FAMILY.find(x=>x.id===t.kid);return `<div class="item-row" style="border-right:3px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} ${t.points?'• ⭐'+t.points:''}</div></div><button class="item-delete" onclick="D.tasks.splice(${idx},1);save();render()">🗑️</button></div>`;}
+function renderTask(t,idx){const m=FAMILY.find(x=>x.id===t.kid);const hasTime=t.date&&t.time;const timeStr=hasTime?t.date.split('-').reverse().slice(0,2).join('/')+' '+t.time:'';return `<div class="item-row" style="border-right:3px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} ${t.points?'• ⭐'+t.points:''} ${timeStr?'• 🕐'+timeStr:''} ${t.reminder?'• 🔔':''}${t.reminderSent?' ✓':''}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="event.stopPropagation();shareToWhatsApp('task',D.tasks[${idx}])">📲</button><button class="item-delete" onclick="D.tasks.splice(${idx},1);save();render()">🗑️</button></div>`;}
 function toggleTask(idx){const t=D.tasks[idx];t.done=!t.done;if(t.done&&t.points&&t.kid){D.points[t.kid]=(D.points[t.kid]||0)+t.points;}save();render();}
-function openAddTask(){modal('✅ משימה',`<div class="form-group"><label>משימה</label><input class="form-input" id="t-text"></div><div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="5"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>`);}
-function saveTask(){const t=document.getElementById('t-text').value.trim();if(!t)return alert('נא משימה');if(!D.tasks)D.tasks=[];D.tasks.push({id:Date.now(),text:t,kid:document.getElementById('t-kid').value,points:parseInt(document.getElementById('t-pts').value)||0,done:false});save();closeModal();render();}
+function openAddTask(){modal('✅ משימה',`<div class="form-group"><label>משימה</label><input class="form-input" id="t-text"></div><div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="t-date" value="${fmtDate(new Date())}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="t-time"></div></div><div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="5"></div><div class="form-group"><label>תזכורת וואטסאפ</label><select class="form-select" id="t-reminder"><option value="">ללא תזכורת</option><option value="0">בזמן המשימה</option><option value="15">15 דקות לפני</option><option value="30">30 דקות לפני</option><option value="60">שעה לפני</option><option value="120">שעתיים לפני</option><option value="1440">יום לפני</option></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>`);}
+function saveTask(){const t=document.getElementById('t-text').value.trim();if(!t)return alert('נא משימה');if(!D.tasks)D.tasks=[];const task={id:Date.now(),text:t,kid:document.getElementById('t-kid').value,date:document.getElementById('t-date').value,time:document.getElementById('t-time').value,points:parseInt(document.getElementById('t-pts').value)||0,reminder:document.getElementById('t-reminder').value,reminderSent:false,done:false};D.tasks.push(task);if(task.reminder&&task.date&&task.time){scheduleReminder(task);}save();closeModal();render();}
 
 function renderMore(){
   if(moreTab==='rewards')return renderRewards();
@@ -298,6 +338,7 @@ function renderMore(){
   if(moreTab==='workouts')return renderWorkouts();
   if(moreTab==='grades')return renderGrades();
   if(moreTab==='money')return renderMoney();
+  if(moreTab==='phones')return renderPhones();
   return `<div class="header"><h1>⚡ עוד</h1></div>
 <div class="more-grid">
 <div class="more-item" onclick="showEmergency()"><div class="icon">🚨</div><div class="label">חירום</div></div>
@@ -307,7 +348,241 @@ function renderMore(){
 <div class="more-item" onclick="setMoreTab('grades')"><div class="icon">📊</div><div class="label">ציונים</div></div>
 <div class="more-item" onclick="setMoreTab('meals')"><div class="icon">🍽️</div><div class="label">ארוחות</div></div>
 <div class="more-item" onclick="setMoreTab('workouts')"><div class="icon">🏃</div><div class="label">אימונים</div></div>
+<div class="more-item" onclick="setMoreTab('phones')"><div class="icon">📱</div><div class="label">טלפונים</div></div>
 </div>`;}
+
+function renderPhones(){
+  return `<div class="header"><h1>📱 מספרי טלפון</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="card">
+<div style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">הזן מספרי טלפון לשליחת הודעות וואטסאפ</div>
+${FAMILY.map(m=>{
+  const phone=D.phones?.[m.id]||'';
+  return '<div class="item-row" style="border-right:3px solid '+m.color+'"><div class="member-'+m.id+'" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">'+m.icon+'</div><div style="flex:1"><div style="font-weight:600">'+m.name+'</div><div class="item-meta">'+(phone||'לא הוזן')+'</div></div><button class="btn btn-small btn-primary" onclick="editPhone(\''+m.id+'\')">✏️</button></div>';
+}).join('')}
+</div>`;
+}
+
+function editPhone(mid){
+  const m=FAMILY.find(x=>x.id===mid);
+  const phone=D.phones?.[mid]||'';
+  modal('📱 טלפון - '+m.name,'<div class="form-group"><label>מספר טלפון</label><input class="form-input" id="phone-input" type="tel" value="'+phone+'" placeholder="0501234567" dir="ltr"></div><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:16px">הזן מספר ישראלי (למשל 0501234567)</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="savePhone(\''+mid+'\')">שמור</button></div>');
+}
+
+function savePhone(mid){
+  const phone=document.getElementById('phone-input').value.trim().replace(/[^0-9]/g,'');
+  if(!D.phones)D.phones={};
+  D.phones[mid]=phone;
+  save();
+  closeModal();
+  render();
+}
+
+function formatPhoneForWhatsApp(phone){
+  if(!phone)return '';
+  let p=phone.replace(/[^0-9]/g,'');
+  if(p.startsWith('0'))p='972'+p.substring(1);
+  return p;
+}
+
+function sendWhatsApp(phone,message){
+  if(!phone){alert('לא הוזן מספר טלפון');return;}
+  const p=formatPhoneForWhatsApp(phone);
+  const url='https://wa.me/'+p+'?text='+encodeURIComponent(message);
+  window.open(url,'_blank');
+}
+
+function sendWhatsAppToMember(mid,message){
+  const phone=D.phones?.[mid]||'';
+  if(!phone){alert('לא הוזן מספר טלפון ל'+FAMILY.find(x=>x.id===mid)?.name);return;}
+  sendWhatsApp(phone,message);
+}
+
+function shareToWhatsApp(type,data){
+  let message='';
+  if(type==='task'){
+    const m=FAMILY.find(x=>x.id===data.kid);
+    message='✅ משימה: '+data.text+'\n👤 '+(m?m.name:'');
+  }else if(type==='event'){
+    const t=EVENT_TYPES.find(x=>x.id===data.type)||EVENT_TYPES[0];
+    const m=FAMILY.find(x=>x.id===data.member);
+    message=t.icon+' אירוע: '+data.title+'\n📅 '+data.date+(data.time?' בשעה '+data.time:'')+'\n👤 '+(m?m.name:'כולם');
+  }else if(type==='shopping'){
+    message='🛒 רשימת קניות:\n'+data.map(function(s){return '• '+s.name+(s.qty?' ('+s.qty+')':'');}).join('\n');
+  }else if(type==='shopping-item'){
+    message='🛒 לקנות: '+data.name+(data.qty?' ('+data.qty+')':'');
+  }
+  
+  showWhatsAppPicker(message);
+}
+
+function showWhatsAppPicker(message){
+  const membersWithPhone=FAMILY.filter(function(m){return D.phones?.[m.id];});
+  let html='<div style="margin-bottom:16px;font-weight:600">שלח ל:</div>';
+  
+  if(membersWithPhone.length===0){
+    html+='<div class="empty" style="padding:20px"><span class="emoji">📱</span>לא הוזנו מספרי טלפון<br><button class="btn btn-primary" style="margin-top:12px" onclick="closeModal();setMoreTab(\'phones\');nav(\'more\')">הוסף טלפונים</button></div>';
+  }else{
+    membersWithPhone.forEach(function(m){
+      html+='<div class="item-row" style="cursor:pointer;border-right:3px solid '+m.color+'" onclick="sendWhatsAppToMember(\''+m.id+'\',\''+message.replace(/'/g,"\\'")+'\');closeModal();"><div class="member-'+m.id+'" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">'+m.icon+'</div><div style="flex:1"><div style="font-weight:600">'+m.name+'</div><div class="item-meta">'+D.phones[m.id]+'</div></div><span style="font-size:1.5rem">📲</span></div>';
+    });
+    html+='<div class="divider"></div><div class="item-row" style="cursor:pointer" onclick="shareWhatsAppGeneric(\''+message.replace(/'/g,"\\'")+'\');closeModal();"><span style="font-size:1.5rem">📤</span><div style="flex:1;font-weight:600">שתף לכל אפליקציה</div></div>';
+  }
+  
+  html+='<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button></div>';
+  modal('📲 שלח בוואטסאפ',html);
+}
+
+function shareWhatsAppGeneric(message){
+  if(navigator.share){
+    navigator.share({text:message}).catch(function(){});
+  }else{
+    window.open('https://wa.me/?text='+encodeURIComponent(message),'_blank');
+  }
+}
+
+// Reminder System
+let reminderTimers={};
+
+function scheduleReminder(task){
+  if(!task.date||!task.time||!task.reminder)return;
+  const taskTime=new Date(task.date+'T'+task.time);
+  const reminderMinutes=parseInt(task.reminder)||0;
+  const reminderTime=new Date(taskTime.getTime()-reminderMinutes*60000);
+  const now=new Date();
+  const delay=reminderTime.getTime()-now.getTime();
+  
+  if(delay>0){
+    reminderTimers[task.id]=setTimeout(function(){
+      showReminderNotification(task);
+    },delay);
+  }
+}
+
+function showReminderNotification(task){
+  const m=FAMILY.find(x=>x.id===task.kid);
+  const message='🔔 תזכורת!\n✅ '+task.text+'\n👤 '+(m?m.name:'')+'\n🕐 '+task.time;
+  
+  // Show in-app notification
+  showNotificationPopup(task,message);
+  
+  // Try to show browser notification
+  if('Notification' in window){
+    if(Notification.permission==='granted'){
+      const n=new Notification('🔔 תזכורת - משפחת טקלה',{
+        body:task.text+' - '+(m?m.name:''),
+        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏠</text></svg>',
+        requireInteraction:true
+      });
+      n.onclick=function(){
+        window.focus();
+        showWhatsAppPicker(message);
+      };
+    }else if(Notification.permission!=='denied'){
+      Notification.requestPermission();
+    }
+  }
+  
+  // Mark as sent
+  const idx=D.tasks.findIndex(t=>t.id===task.id);
+  if(idx>=0){
+    D.tasks[idx].reminderSent=true;
+    save();
+    render();
+  }
+}
+
+function showNotificationPopup(task,message){
+  const m=FAMILY.find(x=>x.id===task.kid);
+  const popup=document.createElement('div');
+  popup.id='reminder-popup';
+  popup.innerHTML=`
+<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:white;border-radius:20px;padding:24px;max-width:350px;width:100%;text-align:center">
+<div style="font-size:3rem;margin-bottom:12px">🔔</div>
+<div style="font-size:1.2rem;font-weight:700;margin-bottom:8px">תזכורת!</div>
+<div style="font-size:1rem;font-weight:600;margin-bottom:4px">${task.text}</div>
+<div style="color:var(--text-light);margin-bottom:4px">${m?m.icon+' '+m.name:''}</div>
+<div style="color:var(--text-light);margin-bottom:20px">🕐 ${task.time}</div>
+<div style="display:flex;gap:10px">
+<button onclick="closeReminderPopup()" style="flex:1;padding:12px;border:2px solid #e2e8f0;background:white;border-radius:12px;font-size:0.9rem;cursor:pointer">סגור</button>
+<button onclick="closeReminderPopup();showWhatsAppPicker('${message.replace(/'/g,"\\'").replace(/\n/g,'\\n')}')" style="flex:1;padding:12px;background:#25D366;color:white;border:none;border-radius:12px;font-size:0.9rem;cursor:pointer">📲 שלח בוואטסאפ</button>
+</div>
+</div>
+</div>`;
+  document.body.appendChild(popup);
+  
+  // Play sound
+  try{
+    const audio=new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp6ciHlxeIOOmZqUiHpxdoGLlZmXkIR6dHqEjpWYlo+DenV5g42Ul5WOgXl1eIKMk5aUjYB4dHeBi5KVk4x/d3R3gIqRlJKLfnZzdoCJkJOSint1c3Z/iI+SkYl6dHN1foePkZCIeXNydX2GjpCPh3hycnR8hY2Pjod3cXJze4SNjo2GdnFxc3qDjI6MhXVwcXJ5goqMi4R0cHByeYGJi4qDc29vcXiAiIqJgnJvb3B3f4eJiIFxbm9vdn6Gh4eBcG5ubnV9hYaGgG9tbW10fISFhX9ubGxtc3uDhIR+bWxsbHJ6goODfWxra2txeYGCgnxramprb3d/gYB7aWlqaW52fX9+emhoaWhtdXx+fXlnZ2hna3N6fHx4ZmZnZmpxeHp6d2VlZmVocHZ4eHZkZGVkZ25zdnZ0Y2NkZGZsdHV1c2FiY2NlbHR1dHJhYWJiY2pxc3JxYGFhYWJpc3JycGBgYGBhZ3BxcG9fX19fYGZvcHBuXl5eXl9lbm9vbV1dXV5eZGxubmxcXF1dXWNrbW1rW1xcXFxibGxsaltbW1tbYWpra2paWlpaWmBpamppWVlZWVlfaGlpaFhYWFhYXmdoaGdXV1dXV11mZ2dmVlZWVlZbZGZmZVVVVVVVWmNkZGRUVFRUVFlhYmNjU1NTU1NYYGFhYlJSUlJSV19gYGFRUVFRUVZeX19fUFBQUFBVXV5eXk9PT09PVFV');
+    audio.play().catch(function(){});
+  }catch(e){}
+}
+
+function closeReminderPopup(){
+  const popup=document.getElementById('reminder-popup');
+  if(popup)popup.remove();
+}
+
+// Check reminders on load and every minute
+function checkAllReminders(){
+  (D.tasks||[]).forEach(function(task){
+    if(task.reminder&&task.date&&task.time&&!task.reminderSent&&!task.done){
+      scheduleReminder(task);
+    }
+  });
+  (D.events||[]).forEach(function(event){
+    if(event.reminder&&event.date&&event.time&&!event.reminderSent){
+      scheduleEventReminder(event);
+    }
+  });
+}
+
+function scheduleEventReminder(event){
+  if(!event.date||!event.time||!event.reminder)return;
+  const eventTime=new Date(event.date+'T'+event.time);
+  const reminderMinutes=parseInt(event.reminder)||0;
+  const reminderTime=new Date(eventTime.getTime()-reminderMinutes*60000);
+  const now=new Date();
+  const delay=reminderTime.getTime()-now.getTime();
+  
+  if(delay>0&&delay<86400000){ // Only schedule if within 24 hours
+    setTimeout(function(){
+      showEventReminderNotification(event);
+    },delay);
+  }
+}
+
+function showEventReminderNotification(event){
+  const t=EVENT_TYPES.find(x=>x.id===event.type)||EVENT_TYPES[0];
+  const m=FAMILY.find(x=>x.id===event.member);
+  const message='🔔 תזכורת!\n'+t.icon+' '+event.title+'\n📅 '+event.date+'\n🕐 '+event.time+'\n👤 '+(m?m.name:'כולם');
+  
+  showNotificationPopup({text:event.title,time:event.time,kid:event.member},message);
+  
+  if('Notification' in window&&Notification.permission==='granted'){
+    new Notification('🔔 תזכורת - '+event.title,{
+      body:(m?m.name:'כולם')+' - '+event.time,
+      requireInteraction:true
+    });
+  }
+  
+  const idx=D.events.findIndex(e=>e.id===event.id);
+  if(idx>=0){
+    D.events[idx].reminderSent=true;
+    save();
+  }
+}
+
+// Request notification permission
+if('Notification' in window&&Notification.permission==='default'){
+  setTimeout(function(){
+    Notification.requestPermission();
+  },3000);
+}
+
+// Start reminder checker
+setTimeout(checkAllReminders,2000);
+setInterval(checkAllReminders,60000);
 
 function showEmergency(){modal('🚨 חירום',`${(D.emergency?.contacts||[]).map(c=>`<a href="tel:${c.phone}" style="display:flex;align-items:center;gap:12px;padding:16px;background:#fee2e2;border-radius:12px;margin-bottom:8px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">${c.icon}</span><div><div style="font-weight:700">${c.name}</div><div style="font-size:1.2rem;color:var(--danger)">${c.phone}</div></div></a>`).join('')}`,'admin');}
 
