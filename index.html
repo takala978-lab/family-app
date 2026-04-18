@@ -201,7 +201,7 @@ body{font-family:'Rubik',sans-serif;background:linear-gradient(180deg,#f0f4ff 0%
 </head>
 <body>
 <div class="loading-overlay" id="loading"><div class="loading-spinner"></div><div class="loading-text">🏠 טוען משפחת טקלה...</div></div>
-<div class="sync-badge online" id="sync-badge"><span id="sync-text">✓</span></div>
+<div class="sync-badge online" id="sync-badge" onclick="forceReload()" style="cursor:pointer"><span id="sync-text">✓</span></div>
 <div id="role-badge"></div>
 <div class="app" id="app"></div>
 
@@ -240,7 +240,7 @@ body{font-family:'Rubik',sans-serif;background:linear-gradient(180deg,#f0f4ff 0%
 
 <script>
 // Firebase
-try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){}
+try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){console.error('Firebase init error:',e);}
 const db=typeof firebase!=='undefined'&&firebase.database?firebase.database():null;
 const dataRef=db?db.ref('familyDataV5'):null;
 const PIN='1234';
@@ -302,21 +302,123 @@ function loadLocal(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return{.
 function saveLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(D));}catch(e){}}
 
 let firebaseLoaded=false;
-setTimeout(()=>{if(!firebaseLoaded){const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();}},5000);
+let lastSyncTime=0;
+let syncListener=null;
 
-function sync(s){document.getElementById('sync-badge').className='sync-badge '+s;document.getElementById('sync-text').textContent=s==='online'?'✓ מסונכרן':'💾 מקומי';}
-function save(){saveLocal();if(!dataRef){sync('offline');return;}sync('syncing');dataRef.set(D).then(()=>sync('online')).catch(()=>sync('offline'));}
+setTimeout(()=>{if(!firebaseLoaded){console.warn('Firebase timeout - loading from local');const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();}},8000);
+
+function sync(s){
+  const badge=document.getElementById('sync-badge');
+  const text=document.getElementById('sync-text');
+  if(!badge||!text)return;
+  badge.className='sync-badge '+s;
+  if(s==='online')text.textContent='✓ מסונכרן';
+  else if(s==='syncing')text.textContent='⟳ מסנכרן...';
+  else text.textContent='💾 מקומי';
+}
+
+function save(){
+  saveLocal();
+  if(!dataRef){sync('offline');return;}
+  sync('syncing');
+  lastSyncTime=Date.now();
+  // Add timestamp to track latest update
+  D._lastUpdate=lastSyncTime;
+  dataRef.set(D)
+    .then(()=>{sync('online');console.log('Saved to Firebase');})
+    .catch(e=>{console.error('Firebase save error:',e);sync('offline');});
+}
+
+function forceReload(){
+  if(!dataRef){alert('אין חיבור לענן');return;}
+  sync('syncing');
+  dataRef.once('value').then(snap=>{
+    const v=snap.val();
+    if(v){
+      D={...DEFAULT,...v};
+      saveLocal();
+      sync('online');
+      render();
+      alert('✅ הנתונים סונכרנו מהענן!');
+    }else{
+      sync('offline');
+      alert('⚠️ אין נתונים בענן');
+    }
+  }).catch(e=>{
+    console.error(e);
+    sync('offline');
+    alert('❌ שגיאה בסנכרון: '+e.message);
+  });
+}
 
 if(dataRef){
-  dataRef.on('value',snap=>{
+  console.log('Firebase connected, setting up listener...');
+  // Test connection first
+  db.ref('.info/connected').on('value',snap=>{
+    if(snap.val()===true){
+      console.log('Firebase connection established');
+    }else{
+      console.log('Firebase disconnected');
+    }
+  });
+  
+  syncListener=dataRef.on('value',snap=>{
     firebaseLoaded=true;
     const v=snap.val();
-    if(v){D={...DEFAULT,...v};saveLocal();}
-    else{const l=loadLocal();if(l){D=l;dataRef.set(D);}}
+    console.log('Firebase data received:',v?'has data':'empty');
+    
+    if(v){
+      // Firebase has data - use it (unless our local is newer)
+      const localData=loadLocal();
+      const cloudTime=v._lastUpdate||0;
+      const localTime=localData?._lastUpdate||0;
+      
+      if(localTime>cloudTime&&localTime>lastSyncTime+1000){
+        // Local is newer - push to cloud
+        console.log('Local is newer, pushing to cloud');
+        D=localData;
+        dataRef.set(D);
+      }else{
+        // Cloud is newer or same - use it
+        console.log('Using cloud data');
+        D={...DEFAULT,...v};
+        saveLocal();
+      }
+    }else{
+      // Firebase is empty - only push local if we have substantial data
+      const localData=loadLocal();
+      if(localData&&(localData.tasks?.length||localData.events?.length||localData.shopping?.length)){
+        console.log('Firebase empty, pushing local data');
+        D=localData;
+        dataRef.set(D);
+      }
+    }
+    
     document.getElementById('loading').classList.add('hidden');
-    sync('online');render();
-  },()=>{firebaseLoaded=true;const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();});
-}else{const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();}
+    sync('online');
+    render();
+  },err=>{
+    console.error('Firebase listener error:',err);
+    firebaseLoaded=true;
+    const l=loadLocal();
+    if(l)D=l;
+    document.getElementById('loading').classList.add('hidden');
+    sync('offline');
+    render();
+    // Show user-friendly error
+    setTimeout(()=>{
+      if(err.code==='PERMISSION_DENIED'){
+        alert('⚠️ בעיית הרשאות ב-Firebase.\nיש לעדכן את כללי האבטחה.\nהאפליקציה עובדת מקומית.');
+      }
+    },1000);
+  });
+}else{
+  console.warn('No Firebase connection');
+  const l=loadLocal();if(l)D=l;
+  document.getElementById('loading').classList.add('hidden');
+  sync('offline');
+  render();
+}
 
 // Points calculation - FIXED
 function gradeToPoints(grade){
