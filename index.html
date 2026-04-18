@@ -449,7 +449,7 @@ function renderHome(){
 <div class="quick-actions">
 <div class="quick-action" onclick="openAddTask()"><div class="icon">✅</div><div class="label">משימה</div></div>
 <div class="quick-action" onclick="openAddEvent()"><div class="icon">📅</div><div class="label">אירוע</div></div>
-<div class="quick-action" onclick="openAddRequest()"><div class="icon">📨</div><div class="label">בקשה</div></div>
+<div class="quick-action" onclick="shareDailySummaryWA()"><div class="icon">📲</div><div class="label">שלח סיכום</div></div>
 <div class="quick-action" onclick="setMoreTab('shop');nav('more')"><div class="icon">🛒</div><div class="label">קניות</div></div>
 </div>
 
@@ -806,7 +806,7 @@ ${cells.map(c=>{
 }).join('')}
 </div>
 </div>
-${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+ הוסף</button></div>${selEv.length?selEv.map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.8rem;color:var(--text-light)">${e.time||'--:--'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div></div>`;}).join(''):'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים</div>'}</div>`:''}
+${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+ הוסף</button></div>${selEv.length?selEv.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);const evIdx=D.events.findIndex(x=>x.id===e.id);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.8rem;color:var(--text-light)">${e.time||'--:--'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div>${evIdx>=0?`<button class="btn btn-small btn-whatsapp" style="padding:6px 10px" onclick="shareEventWA(${evIdx})">📲</button>`:''}</div>`;}).join(''):'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים</div>'}</div>`:''}
 <button class="btn btn-primary btn-fab" onclick="openAddEvent()">+</button>
 `;
 }
@@ -839,8 +839,8 @@ ${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12
 
 function renderTask(t,idx){
   const m=FAMILY.find(x=>x.id===t.kid);
-  const pts=t.points||D.settings?.taskPoints||5;
-  return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${pts}${t.date?' • '+t.date.split('-').reverse().slice(0,2).join('/'):''}</div></div><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;
+  const pts=t.points||D.settings?.taskPoints||1;
+  return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${pts}${t.date?' • '+t.date.split('-').reverse().slice(0,2).join('/'):''}</div></div><button class="btn btn-small btn-whatsapp" style="padding:6px 10px" onclick="event.stopPropagation();shareTaskWA(${idx})">📲</button><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;
 }
 
 function toggleTask(idx){
@@ -877,6 +877,7 @@ function renderShop(){
 <div class="header"><h1>🛒 קניות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
 <div class="card">
 <div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" class="form-input" id="quick-shop" placeholder="הוסף פריט..." onkeypress="if(event.key==='Enter')quickShop()"><button class="btn btn-primary" onclick="quickShop()">+</button></div>
+${pending.length?`<button class="btn btn-whatsapp" style="width:100%" onclick="shareShoppingListWA()">📲 שלח רשימה בוואטסאפ</button>`:''}
 </div>
 <div class="card">
 ${pending.length?pending.map((s,i)=>`<div class="item-row"><div class="item-check ${s.done?'done':''}" onclick="toggleShop(${items.indexOf(s)})">${s.done?'✓':''}</div><div style="flex:1">${s.name}</div><button class="item-delete" onclick="deleteShop(${items.indexOf(s)})">🗑️</button></div>`).join(''):'<div class="empty" style="padding:20px">הרשימה ריקה</div>'}
@@ -1211,6 +1212,106 @@ function deleteLesson(mid,day,time){const idx=(D.schedules?.[mid]?.[day]||[]).fi
 
 function showEmergency(){
   modal('🚨 חירום',`<a href="tel:100" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;margin-bottom:10px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚔</span><div><div style="font-weight:700">משטרה</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">100</div></div></a><a href="tel:101" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;margin-bottom:10px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚑</span><div><div style="font-weight:700">מד״א</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">101</div></div></a><a href="tel:102" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚒</span><div><div style="font-weight:700">כיבוי</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">102</div></div></a>`,'danger');
+}
+
+// WhatsApp Functions
+function formatPhoneForWA(p){if(!p)return'';let n=p.replace(/[^0-9]/g,'');if(n.startsWith('0'))n='972'+n.substring(1);return n;}
+
+function shareTaskWA(idx){
+  const t=D.tasks[idx];
+  const m=FAMILY.find(x=>x.id===t.kid);
+  const msg=`✅ *משימה חדשה*\n\n📝 ${t.text}\n👤 ${m?m.name:''}\n📅 ${t.date||'היום'}\n⭐ ${t.points||1} נקודות`;
+  openShareModal(msg,t.kid);
+}
+
+function shareEventWA(idx){
+  const e=D.events[idx];
+  const m=FAMILY.find(x=>x.id===e.member);
+  const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];
+  const msg=`${t.icon} *${e.title}*\n\n📅 ${e.date}\n⏰ ${e.time||'כל היום'}\n👤 ${m?m.name:'כולם'}`;
+  openShareModal(msg,e.member);
+}
+
+function shareShoppingListWA(){
+  const items=D.shopping.filter(s=>!s.done).map(s=>'• '+s.name).join('\n');
+  const msg=`🛒 *רשימת קניות*\n\n${items}`;
+  openShareModal(msg);
+}
+
+function shareDailySummaryWA(){
+  const today=fmtDate(new Date());
+  const dayIdx=getDayIdx(new Date());
+  const tasks=(D.tasks||[]).filter(t=>t.date===today&&!t.done);
+  const events=(D.events||[]).filter(e=>e.date===today);
+  const meals=MEALS.map(m=>({name:m,items:D.meals?.[dayIdx+'-'+m]||[]})).filter(m=>m.items.length);
+  
+  let msg=`🏠 *סיכום יומי - משפחת טקלה*\n📅 ${new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}\n\n`;
+  
+  if(tasks.length){
+    msg+=`✅ *משימות להיום:*\n`;
+    tasks.forEach(t=>{const m=FAMILY.find(x=>x.id===t.kid);msg+=`• ${t.text} (${m?.short||''})\n`;});
+    msg+='\n';
+  }
+  
+  if(events.length){
+    msg+=`📅 *אירועים:*\n`;
+    events.forEach(e=>{const m=FAMILY.find(x=>x.id===e.member);msg+=`• ${e.time||'--:--'} ${e.title}${m?' ('+m.short+')':''}\n`;});
+    msg+='\n';
+  }
+  
+  if(meals.length){
+    msg+=`🍽️ *ארוחות:*\n`;
+    meals.forEach(m=>msg+=`• ${m.name}: ${m.items.map(i=>i.name).join(', ')}\n`);
+  }
+  
+  openShareModal(msg);
+}
+
+function openShareModal(msg,defaultMember){
+  const phones=FAMILY.filter(m=>D.phones?.[m.id]).map(m=>({...m,phone:D.phones[m.id]}));
+  
+  let html=`<div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px;font-size:0.85rem;white-space:pre-wrap;max-height:150px;overflow-y:auto">${msg}</div>`;
+  
+  if(phones.length){
+    html+=`<div style="font-weight:600;margin-bottom:12px">📲 שלח ל:</div>`;
+    html+=phones.map(m=>`<div class="item-row" style="cursor:pointer;border-right:3px solid ${m.color}" onclick="sendWhatsApp('${m.phone}',\`${msg.replace(/`/g,"'")}\`)"><div class="member-${m.id}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center">${m.icon}</div><div style="flex:1;font-weight:600">${m.name}</div><span style="font-size:1.5rem;color:#25D366">📲</span></div>`).join('');
+    html+=`<div class="divider"></div>`;
+    html+=`<button class="btn btn-whatsapp" style="width:100%;margin-bottom:10px" onclick="sendWhatsAppAll(\`${msg.replace(/`/g,"'")}\`)">📲 שלח לכל המשפחה</button>`;
+  }else{
+    html+=`<div style="background:#fef3c7;padding:12px;border-radius:12px;margin-bottom:12px"><span style="font-weight:600">⚠️ לא הוזנו מספרי טלפון</span><div style="font-size:0.85rem;color:var(--text-light);margin-top:4px">עבור ל"עוד" > "טלפונים" להוסיף מספרים</div></div>`;
+  }
+  
+  html+=`<button class="btn btn-outline" style="width:100%" onclick="shareGeneric(\`${msg.replace(/`/g,"'")}\`)">📤 שתף לאפליקציה אחרת</button>`;
+  html+=`<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">סגור</button></div>`;
+  
+  modal('📲 שליחה בוואטסאפ',html);
+}
+
+function sendWhatsApp(phone,msg){
+  const p=formatPhoneForWA(phone);
+  window.open('https://wa.me/'+p+'?text='+encodeURIComponent(msg),'_blank');
+  closeModal();
+}
+
+function sendWhatsAppAll(msg){
+  const phones=FAMILY.filter(m=>D.phones?.[m.id]).map(m=>formatPhoneForWA(D.phones[m.id]));
+  if(phones.length){
+    // Open first one, alert about others
+    window.open('https://wa.me/'+phones[0]+'?text='+encodeURIComponent(msg),'_blank');
+    if(phones.length>1){
+      setTimeout(()=>alert('נפתח וואטסאפ לאיש הראשון. לשלוח לאחרים, חזור ובחר אותם.'),500);
+    }
+  }
+  closeModal();
+}
+
+function shareGeneric(msg){
+  if(navigator.share){
+    navigator.share({text:msg});
+  }else{
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  }
+  closeModal();
 }
 
 updateBadge();
