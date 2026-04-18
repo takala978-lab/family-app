@@ -524,7 +524,16 @@ function renderHome(){
   
   // Today's data
   const dayEvents=(D.events||[]).filter(e=>e.date===todayStr).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-  const dayTasks=(D.tasks||[]).filter(t=>t.date===todayStr&&!t.done&&!t.recurring);
+  // Today's tasks - include recurring that apply today
+  const dayTasks=(D.tasks||[]).filter(t=>{
+    if(t.done)return false;
+    if(!t.recurring){return t.date===todayStr;}
+    // Recurring task - check if applies today
+    if(t.frequency==='daily')return true;
+    if(t.frequency==='weekly')return t.dayOfWeek===dayIdx;
+    if(t.frequency==='monthly')return t.dayOfMonth===homeDate.getDate();
+    return false;
+  });
   const pendingRequests=(D.requests||[]).filter(r=>r.status==='pending');
   
   // Today's meals
@@ -828,21 +837,77 @@ ${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12
 
 function renderMemberExams(){
   const exams=D.exams?.[member]||[];
-  const upcoming=exams.filter(e=>parseDate(e.date)>=new Date()&&!e.grade).sort((a,b)=>a.date.localeCompare(b.date));
-  const graded=exams.filter(e=>e.grade!==undefined).sort((a,b)=>b.date?.localeCompare(a.date));
+  const today=new Date();today.setHours(0,0,0,0);
+  const upcoming=exams.filter(e=>parseDate(e.date)>=today&&e.grade===undefined).sort((a,b)=>a.date.localeCompare(b.date));
+  const pastNoGrade=exams.filter(e=>parseDate(e.date)<today&&e.grade===undefined).sort((a,b)=>b.date.localeCompare(a.date));
+  const graded=exams.filter(e=>e.grade!==undefined).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const avg=graded.length?Math.round(graded.reduce((s,e)=>s+e.grade,0)/graded.length):0;
+  const totalPoints=graded.reduce((s,e)=>s+gradeToPoints(e.grade),0);
   
   return `
 <div class="card">
-<div class="card-header"><div class="card-title">📝 לוח מבחנים</div><button class="btn btn-small btn-primary" onclick="openAddExam('${member}')">+ הוסף</button></div>
-${upcoming.length?upcoming.map(e=>`<div class="exam-card"><div class="exam-date">📅 ${parseDate(e.date).toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'})}</div><div class="exam-subject">${e.subject}</div>${e.notes?`<div style="font-size:0.8rem;color:var(--text-light);margin-top:4px">${e.notes}</div>`:''}<button class="btn btn-small btn-warning" style="margin-top:8px" onclick="openEnterGrade('${member}',${e.id})">הזן ציון</button></div>`).join(''):'<div class="empty" style="padding:16px">אין מבחנים קרובים</div>'}
+<div class="card-header"><div class="card-title">📝 לוח מבחנים</div><button class="btn btn-small btn-primary" onclick="openAddExam('${member}')">+ הוסף מבחן</button></div>
+
+${upcoming.length?`
+<div style="font-weight:600;margin-bottom:10px;color:var(--primary)">📅 מבחנים קרובים</div>
+${upcoming.map(e=>{
+  const daysUntil=Math.ceil((parseDate(e.date)-today)/86400000);
+  const urgentBadge=daysUntil<=3?`<span class="badge badge-danger">${daysUntil===0?'היום!':daysUntil===1?'מחר':daysUntil+' ימים'}</span>`:`<span class="badge badge-info">בעוד ${daysUntil} ימים</span>`;
+  return `<div class="exam-card">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+<div class="exam-date">📅 ${parseDate(e.date).toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'})}${e.time?' • ⏰'+e.time:''}</div>
+${urgentBadge}
+</div>
+<div class="exam-subject">${e.examType||'מבחן'}: ${e.subject}</div>
+${e.notes?`<div style="font-size:0.8rem;color:var(--text-light);margin-top:4px">${e.notes}</div>`:''}
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn btn-small btn-warning" style="flex:1" onclick="openEnterGrade('${member}',${e.id})">📊 הזן ציון</button>
+<button class="btn btn-small btn-outline" onclick="deleteExam('${member}',${e.id})">🗑️</button>
+</div>
+</div>`;
+}).join('')}`:'<div class="empty" style="padding:16px">אין מבחנים קרובים</div>'}
+
+${pastNoGrade.length?`
+<div style="font-weight:600;margin:16px 0 10px;color:var(--warning)">⚠️ מבחנים שעברו ללא ציון</div>
+${pastNoGrade.map(e=>`<div class="exam-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-right-color:var(--warning)">
+<div class="exam-date" style="color:var(--warning)">📅 ${parseDate(e.date).toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'})}</div>
+<div class="exam-subject">${e.examType||'מבחן'}: ${e.subject}</div>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn btn-small btn-warning" style="flex:1" onclick="openEnterGrade('${member}',${e.id})">📊 הזן ציון</button>
+<button class="btn btn-small btn-outline" onclick="deleteExam('${member}',${e.id})">🗑️</button>
+</div>
+</div>`).join('')}`:''}
 </div>
 
 <div class="card">
-<div class="card-header"><div class="card-title">📊 ציונים</div>${avg?`<span class="badge badge-${avg>=80?'success':avg>=60?'warning':'danger'}">ממוצע: ${avg}</span>`:''}</div>
-${graded.length?graded.map(e=>{const pts=gradeToPoints(e.grade);return `<div class="item-row" style="border-right:4px solid ${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${e.subject}</div><div class="item-meta">${e.date||''}</div></div><div style="text-align:left"><div style="font-size:1.3rem;font-weight:700;color:${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}">${e.grade}</div><div style="font-size:0.7rem;color:var(--text-light)">+${pts} נק'</div></div></div>`;}).join(''):'<div class="empty" style="padding:16px">אין ציונים</div>'}
+<div class="card-header"><div class="card-title">📊 ציונים</div>${avg?`<div style="display:flex;gap:6px"><span class="badge badge-${avg>=80?'success':avg>=60?'warning':'danger'}">ממוצע: ${avg}</span><span class="badge badge-purple">⭐ ${totalPoints} נק'</span></div>`:''}</div>
+${graded.length?graded.map(e=>{
+  const pts=gradeToPoints(e.grade);
+  return `<div class="item-row" style="border-right:4px solid ${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}">
+<div style="flex:1">
+<div style="font-weight:600">${e.subject}</div>
+<div class="item-meta">${e.examType||''} • ${e.date||''}</div>
+</div>
+<div style="text-align:left;min-width:70px">
+<div style="font-size:1.3rem;font-weight:700;color:${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}">${e.grade}</div>
+<div style="font-size:0.7rem;color:var(--text-light)">+${pts} נק'</div>
+</div>
+<button class="item-delete" onclick="deleteExam('${member}',${e.id})">🗑️</button>
+</div>`;
+}).join(''):'<div class="empty" style="padding:16px">אין ציונים</div>'}
 </div>
 `;
+}
+
+function deleteExam(kid,examId){
+  if(!confirm('למחוק את המבחן?'))return;
+  // Remove from exams
+  if(D.exams[kid]){
+    D.exams[kid]=D.exams[kid].filter(e=>e.id!==examId);
+  }
+  // Remove from calendar events
+  D.events=(D.events||[]).filter(ev=>ev._examId!==examId);
+  save();render();
 }
 
 function renderMemberWorkouts(){
@@ -878,9 +943,49 @@ function renderCal(){
   const allEvents=[...(D.events||[])];
   // Add exams as events
   Object.entries(D.exams||{}).forEach(([kid,exams])=>{
-    exams.forEach(e=>{if(e.date)allEvents.push({date:e.date,title:e.subject,type:'exam',member:kid});});
+    exams.forEach(e=>{if(e.date&&!e.grade)allEvents.push({id:'ex'+e.id,date:e.date,title:'מבחן: '+e.subject,type:'exam',member:kid});});
   });
-  // Add workouts as events (for today's day of week)
+  // Add recurring workouts to calendar for the visible month
+  (D.workouts||[]).forEach(w=>{
+    // Find all dates in current month matching this day of week
+    for(let i=1;i<=daysInMonth;i++){
+      const dt=new Date(y,mon,i);
+      if(dt.getDay()===w.day){
+        allEvents.push({
+          id:'wk'+w.id+'-'+i,
+          date:fmtDate(dt),
+          time:w.time,
+          title:w.activity,
+          type:'workout',
+          member:w.member,
+          _isWorkout:true
+        });
+      }
+    }
+  });
+  
+  // Add recurring tasks to calendar
+  (D.tasks||[]).forEach(t=>{
+    if(!t.recurring)return;
+    for(let i=1;i<=daysInMonth;i++){
+      const dt=new Date(y,mon,i);
+      let addIt=false;
+      if(t.frequency==='daily')addIt=true;
+      else if(t.frequency==='weekly'&&dt.getDay()===t.dayOfWeek)addIt=true;
+      else if(t.frequency==='monthly'&&dt.getDate()===t.dayOfMonth)addIt=true;
+      if(addIt){
+        allEvents.push({
+          id:'tk'+t.id+'-'+i,
+          date:fmtDate(dt),
+          time:t.time,
+          title:'✅ '+t.text,
+          type:'event',
+          member:t.kid,
+          _isTask:true
+        });
+      }
+    }
+  });
   
   for(let i=1;i<=daysInMonth;i++){
     const dt=new Date(y,mon,i),ds=fmtDate(dt);
@@ -932,7 +1037,7 @@ function renderTasks(){
 ${regular.length?regular.map((t,i)=>renderTask(t,tasks.indexOf(t))).join(''):'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין משימות!</div>'}
 </div>
 
-${recurring.length?`<div class="card"><div class="card-header"><div class="card-title">🔄 משימות קבועות</div></div><div style="color:var(--text-light);font-size:0.85rem;margin-bottom:12px">משימות קבועות מופיעות בעמודים האישיים</div>${recurring.slice(0,5).map((t,i)=>{const m=FAMILY.find(x=>x.id===t.kid);return `<div class="item-row"><span style="font-size:1.2rem">🔄</span><div style="flex:1"><div style="font-weight:600">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''}</div></div></div>`;}).join('')}</div>`:''}
+${recurring.length?`<div class="card"><div class="card-header"><div class="card-title">🔄 משימות קבועות</div></div><div style="color:var(--text-light);font-size:0.85rem;margin-bottom:12px">משימות קבועות מופיעות גם בעמודים האישיים</div>${recurring.map((t,i)=>{const m=FAMILY.find(x=>x.id===t.kid);const idx=tasks.indexOf(t);const timeStr=t.time?' • ⏰'+t.time:'';return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><span style="font-size:1.2rem">🔄</span><div style="flex:1"><div style="font-weight:600">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${t.points||1}${timeStr}</div></div><button class="btn btn-small btn-whatsapp" style="padding:6px 10px" onclick="shareTaskWA(${idx})">📲</button><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;}).join('')}</div>`:''}
 
 ${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו (${done.length})</div>${done.slice(-5).map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>`:''}
 <button class="btn btn-primary btn-fab" onclick="openAddTask()">+</button>
@@ -942,7 +1047,18 @@ ${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12
 function renderTask(t,idx){
   const m=FAMILY.find(x=>x.id===t.kid);
   const pts=t.points||D.settings?.taskPoints||1;
-  return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${pts}${t.date?' • '+t.date.split('-').reverse().slice(0,2).join('/'):''}</div></div><button class="btn btn-small btn-whatsapp" style="padding:6px 10px" onclick="event.stopPropagation();shareTaskWA(${idx})">📲</button><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;
+  const timeStr=t.time?' • ⏰'+t.time:'';
+  const dateStr=t.date?' • '+t.date.split('-').reverse().slice(0,2).join('/'):'';
+  let recurStr='';
+  let recurIcon='';
+  if(t.recurring){
+    recurIcon='🔄 ';
+    if(t.frequency==='daily')recurStr=' • 🔁 יומי';
+    else if(t.frequency==='weekly')recurStr=' • 📅 כל יום '+DAYS[t.dayOfWeek||0];
+    else if(t.frequency==='monthly')recurStr=' • 🗓️ ה-'+(t.dayOfMonth||1)+' בחודש';
+    else recurStr=' • 🔄 קבוע';
+  }
+  return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${recurIcon}${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${pts}${dateStr}${timeStr}${recurStr}</div></div><button class="btn btn-small btn-whatsapp" style="padding:6px 10px" onclick="event.stopPropagation();shareTaskWA(${idx})">📲</button><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;
 }
 
 function toggleTask(idx){
@@ -961,6 +1077,7 @@ function renderMore(){
   if(moreTab==='shop')return renderShop();
   if(moreTab==='phones')return renderPhones();
   if(moreTab==='meals')return renderMeals();
+  if(moreTab==='workouts')return renderWorkoutsPage();
   return `
 <div class="header"><h1>⚡ עוד</h1></div>
 <div class="more-grid">
@@ -968,8 +1085,101 @@ function renderMore(){
 <div class="more-item" onclick="setMoreTab('shop')"><div class="icon">🛒</div><div class="label">קניות</div></div>
 <div class="more-item" onclick="setMoreTab('phones')"><div class="icon">📱</div><div class="label">טלפונים</div></div>
 <div class="more-item" onclick="setMoreTab('meals')"><div class="icon">🍽️</div><div class="label">ארוחות</div></div>
+<div class="more-item" onclick="setMoreTab('workouts')"><div class="icon">🏃</div><div class="label">אימונים</div></div>
 </div>
 `;
+}
+
+function renderWorkoutsPage(){
+  const workouts=D.workouts||[];
+  const completed=D.completedWorkouts||[];
+  const ptsPerWorkout=D.settings?.workoutPoints||5;
+  const today=getDayIdx(new Date());
+  
+  // Group workouts by day
+  const byDay={};
+  workouts.forEach(w=>{
+    if(!byDay[w.day])byDay[w.day]=[];
+    byDay[w.day].push(w);
+  });
+  
+  // Today's workouts
+  const todayWorkouts=workouts.filter(w=>w.day===today);
+  
+  return `
+<div class="header"><h1>🏃 אימונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+
+<!-- Quick stats -->
+<div class="stats-grid">
+<div class="stat-card purple"><div class="stat-value">${workouts.length}</div><div class="stat-label">אימונים קבועים</div></div>
+<div class="stat-card success"><div class="stat-value">${completed.length}</div><div class="stat-label">בוצעו</div></div>
+</div>
+
+<!-- Today's workouts -->
+${todayWorkouts.length?`
+<div class="card" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white">
+<div class="card-title" style="color:white;margin-bottom:12px">📍 אימונים להיום</div>
+${todayWorkouts.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).map(w=>{
+  const m=FAMILY.find(x=>x.id===w.member);
+  const wIdx=workouts.indexOf(w);
+  return `<div style="background:rgba(255,255,255,0.15);padding:12px;border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+<div style="font-size:1.5rem">${w.icon||'🏃'}</div>
+<div style="flex:1">
+<div style="font-weight:600">${w.activity}</div>
+<div style="font-size:0.75rem;opacity:0.9">⏰ ${w.time||'--:--'} • ${m?m.icon+' '+m.short:''}</div>
+</div>
+<button class="btn btn-small btn-success" onclick="logWorkout('${w.member}','${w.activity}')">✓</button>
+</div>`;
+}).join('')}
+</div>`:''}
+
+<!-- Weekly schedule -->
+<div class="card">
+<div class="card-header"><div class="card-title">📅 לו"ז שבועי</div><button class="btn btn-small btn-primary" onclick="openAddWorkout()">+ הוסף</button></div>
+${DAYS.map((day,di)=>{
+  const dayWorkouts=byDay[di]||[];
+  const isToday=di===today;
+  if(dayWorkouts.length===0)return '';
+  return `<div style="background:${isToday?'rgba(139,92,246,0.1)':'var(--bg)'};border-radius:12px;padding:12px;margin-bottom:10px;${isToday?'border:2px solid var(--purple)':''}">
+<div style="font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+<span>${isToday?'📍':''} ${day}</span>
+${isToday?'<span class="badge badge-purple">היום</span>':''}
+</div>
+${dayWorkouts.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).map(w=>{
+  const m=FAMILY.find(x=>x.id===w.member);
+  const wIdx=workouts.indexOf(w);
+  return `<div style="background:white;padding:10px;border-radius:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;border-right:3px solid ${m?.color||'#8b5cf6'}">
+<div style="font-size:1.3rem">🏃</div>
+<div style="flex:1">
+<div style="font-weight:600;font-size:0.9rem">${w.activity}</div>
+<div style="font-size:0.7rem;color:var(--text-light)">⏰ ${w.time||'--:--'} • ${m?m.icon+' '+m.short:''}</div>
+</div>
+<button class="btn btn-small btn-success" style="padding:6px 10px" onclick="logWorkout('${w.member}','${w.activity}')" title="סמן כבוצע">✓</button>
+<button class="item-delete" onclick="deleteWorkout(${wIdx})">🗑️</button>
+</div>`;
+}).join('')}
+</div>`;
+}).join('')}
+${workouts.length===0?'<div class="empty" style="padding:20px"><span class="emoji">🏃</span>אין אימונים קבועים<br><button class="btn btn-primary btn-small" style="margin-top:12px" onclick="openAddWorkout()">+ הוסף אימון</button></div>':''}
+</div>
+
+<!-- Completed history -->
+<div class="card">
+<div class="card-header"><div class="card-title">✅ אימונים שבוצעו</div><span class="badge badge-purple">+${completed.length*ptsPerWorkout} נק'</span></div>
+${completed.length?completed.slice(-10).reverse().map(w=>{
+  const m=FAMILY.find(x=>x.id===w.member);
+  return `<div class="item-row"><span style="font-size:1.3rem">🏆</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ${w.date}</div></div><span class="badge badge-success">+${ptsPerWorkout}</span></div>`;
+}).join(''):'<div class="empty" style="padding:20px">עדיין לא בוצעו אימונים</div>'}
+</div>
+
+<button class="btn btn-primary btn-fab" onclick="openAddWorkout()">+</button>
+`;
+}
+
+function deleteWorkout(idx){
+  if(!confirm('למחוק את האימון?'))return;
+  D.workouts.splice(idx,1);
+  save();render();
 }
 
 function renderShop(){
@@ -1033,19 +1243,78 @@ function openAddTask(){
   modal('✅ משימה חדשה',`
 <div class="form-group"><label>משימה</label><input class="form-input" id="t-text" placeholder="תאר את המשימה..."></div>
 <div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>סוג משימה</label><select class="form-select" id="t-type" onchange="toggleTaskFields()"><option value="once">מזדמנת (חד פעמית)</option><option value="recurring">קבועה (חוזרת)</option></select></div>
+
+<!-- Fields for ONCE -->
+<div id="t-once-fields">
 <div class="form-row">
 <div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="t-date" value="${fmtDate(new Date())}"></div>
-<div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="${D.settings?.taskPoints||1}" min="1"></div>
+<div class="form-group"><label>שעה</label><input type="time" class="form-input" id="t-time"></div>
 </div>
-<div class="form-group"><label>סוג משימה</label><select class="form-select" id="t-type"><option value="once">מזדמנת (חד פעמית)</option><option value="recurring">קבועה (חוזרת)</option></select></div>
+</div>
+
+<!-- Fields for RECURRING -->
+<div id="t-recur-fields" style="display:none">
+<div class="form-group"><label>תדירות</label><select class="form-select" id="t-freq" onchange="toggleFreqFields()">
+<option value="daily">🔁 יומי (כל יום)</option>
+<option value="weekly">📅 שבועי (יום ספציפי)</option>
+<option value="monthly">🗓️ חודשי (תאריך בחודש)</option>
+</select></div>
+
+<!-- Weekly - day selector -->
+<div class="form-group" id="t-weekly-day" style="display:none"><label>יום בשבוע</label><select class="form-select" id="t-day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
+
+<!-- Monthly - date selector -->
+<div class="form-group" id="t-monthly-date" style="display:none"><label>יום בחודש</label><select class="form-select" id="t-monthday">${Array.from({length:31},(_,i)=>`<option value="${i+1}">ה-${i+1} בחודש</option>`).join('')}</select></div>
+
+<div class="form-group"><label>שעה</label><input type="time" class="form-input" id="t-recur-time" value="07:00"></div>
+</div>
+
+<div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="${D.settings?.taskPoints||1}" min="1"></div>
 <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>
 `);
+}
+
+function toggleTaskFields(){
+  const type=document.getElementById('t-type').value;
+  document.getElementById('t-once-fields').style.display=type==='once'?'block':'none';
+  document.getElementById('t-recur-fields').style.display=type==='recurring'?'block':'none';
+  if(type==='recurring')toggleFreqFields();
+}
+
+function toggleFreqFields(){
+  const freq=document.getElementById('t-freq').value;
+  document.getElementById('t-weekly-day').style.display=freq==='weekly'?'block':'none';
+  document.getElementById('t-monthly-date').style.display=freq==='monthly'?'block':'none';
 }
 
 function saveTask(){
   const text=document.getElementById('t-text').value.trim();
   if(!text)return alert('נא להזין משימה');
-  D.tasks.push({id:Date.now(),text,kid:document.getElementById('t-kid').value,date:document.getElementById('t-date').value,points:parseInt(document.getElementById('t-pts').value)||5,recurring:document.getElementById('t-type').value==='recurring',done:false});
+  const type=document.getElementById('t-type').value;
+  const recurring=type==='recurring';
+  
+  const task={
+    id:Date.now(),
+    text,
+    kid:document.getElementById('t-kid').value,
+    points:parseInt(document.getElementById('t-pts').value)||1,
+    recurring,
+    done:false
+  };
+  
+  if(recurring){
+    task.frequency=document.getElementById('t-freq').value;
+    task.time=document.getElementById('t-recur-time').value||'';
+    if(task.frequency==='weekly')task.dayOfWeek=parseInt(document.getElementById('t-day').value);
+    if(task.frequency==='monthly')task.dayOfMonth=parseInt(document.getElementById('t-monthday').value);
+    task.date='';
+  }else{
+    task.date=document.getElementById('t-date').value;
+    task.time=document.getElementById('t-time').value||'';
+  }
+  
+  D.tasks.push(task);
   save();closeModal();render();
 }
 
@@ -1073,8 +1342,12 @@ function saveEvent(){
 function openAddExam(kid){
   modal('📝 מבחן חדש',`
 <div class="form-group"><label>מקצוע</label><input class="form-input" id="ex-subj" placeholder="מתמטיקה, אנגלית..."></div>
+<div class="form-row">
 <div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="ex-date" value="${fmtDate(new Date())}"></div>
-<div class="form-group"><label>הערות</label><input class="form-input" id="ex-notes" placeholder="פרקים, נושאים..."></div>
+<div class="form-group"><label>שעה</label><input type="time" class="form-input" id="ex-time" value="08:00"></div>
+</div>
+<div class="form-group"><label>סוג</label><select class="form-select" id="ex-type"><option>מבחן</option><option>בוחן</option><option>עבודה</option><option>פרויקט</option></select></div>
+<div class="form-group"><label>הערות (פרקים, נושאים)</label><textarea class="form-input" id="ex-notes" rows="2" placeholder="פרקים 3-5, שברים..."></textarea></div>
 <input type="hidden" id="ex-kid" value="${kid}">
 <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveExam()">הוסף</button></div>
 `,'danger');
@@ -1084,11 +1357,15 @@ function saveExam(){
   const kid=document.getElementById('ex-kid').value;
   const subject=document.getElementById('ex-subj').value.trim();
   const date=document.getElementById('ex-date').value;
+  const time=document.getElementById('ex-time').value||'';
+  const type=document.getElementById('ex-type').value;
+  const notes=document.getElementById('ex-notes').value.trim();
   if(!subject)return alert('נא להזין מקצוע');
   if(!D.exams[kid])D.exams[kid]=[];
-  D.exams[kid].push({id:Date.now(),subject,date,notes:document.getElementById('ex-notes').value});
-  // Also add to calendar
-  D.events.push({id:Date.now()+1,title:'מבחן: '+subject,type:'exam',date,member:kid});
+  const exam={id:Date.now(),subject,date,time,examType:type,notes};
+  D.exams[kid].push(exam);
+  // Also add to calendar - link to exam
+  D.events.push({id:Date.now()+1,title:type+': '+subject,type:'exam',date,time,member:kid,_examId:exam.id});
   save();closeModal();render();
 }
 
