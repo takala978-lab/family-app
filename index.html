@@ -4,68 +4,80 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>🏠 משפחת טקלה</title>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
-:root{--primary:#667eea;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--text:#1e293b;--text-light:#64748b;--border:#e2e8f0}
+:root{--primary:#667eea;--primary-dark:#5a67d8;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--purple:#8b5cf6;--pink:#ec4899;--cyan:#06b6d4;--text:#1e293b;--text-light:#64748b;--border:#e2e8f0;--bg:#f8fafc}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Rubik',sans-serif;background:#f1f5f9;min-height:100vh;direction:rtl}
-.app{max-width:500px;margin:0 auto;padding:16px 16px 90px}
-.header{background:linear-gradient(135deg,#667eea,#764ba2);margin:-16px -16px 16px;padding:20px 16px;color:white}
-.header h1{font-size:1.3rem;font-weight:700}
+body{font-family:'Rubik',sans-serif;background:linear-gradient(180deg,#f0f4ff 0%,#fdf4ff 100%);min-height:100vh;direction:rtl}
+.app{max-width:500px;margin:0 auto;padding:16px 16px 100px}
+.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:-16px -16px 16px;padding:24px 16px;color:white;border-radius:0 0 24px 24px;box-shadow:0 4px 20px rgba(102,126,234,0.3)}
+.header h1{font-size:1.4rem;font-weight:700}
 .header-sub{opacity:0.9;font-size:0.8rem;margin-top:4px}
-.sync-badge{position:fixed;top:10px;left:10px;padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200}
-.sync-badge.online{background:var(--success);color:white}
-.sync-badge.offline{background:var(--danger);color:white}
-.admin-badge,.user-badge{position:fixed;top:10px;right:10px;padding:4px 10px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200;cursor:pointer}
-.admin-badge{background:linear-gradient(135deg,#ef4444,#dc2626);color:white}
-.user-badge{background:rgba(0,0,0,0.3);color:white}
-.card{background:white;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.header-row{display:flex;justify-content:space-between;align-items:center}
+
+.sync-badge{position:fixed;top:12px;left:12px;padding:6px 12px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200;backdrop-filter:blur(10px)}
+.sync-badge.online{background:rgba(16,185,129,0.9);color:white}
+.sync-badge.offline{background:rgba(239,68,68,0.9);color:white}
+.admin-badge,.user-badge{position:fixed;top:12px;right:12px;padding:6px 12px;border-radius:20px;font-size:0.65rem;font-weight:600;z-index:200;cursor:pointer;backdrop-filter:blur(10px)}
+.admin-badge{background:rgba(239,68,68,0.9);color:white}
+.user-badge{background:rgba(0,0,0,0.4);color:white}
+
+.card{background:white;border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .card-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
-.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:8px 4px 20px;box-shadow:0 -2px 20px rgba(0,0,0,0.1);border-radius:20px 20px 0 0;z-index:100}
-.nav-btn{background:none;border:none;color:var(--text-light);padding:8px 12px;font-size:0.6rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:12px;font-family:inherit}
-.nav-btn svg{width:22px;height:22px}
-.nav-btn.active{color:var(--primary);background:rgba(102,126,234,0.1)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:12px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit}
-.btn-primary{background:var(--primary);color:white}
-.btn-success{background:var(--success);color:white}
-.btn-danger{background:var(--danger);color:white}
-.btn-warning{background:var(--warning);color:white}
-.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text)}
-.btn-small{padding:6px 12px;font-size:0.75rem}
-.btn-fab{position:fixed;bottom:90px;left:20px;width:56px;height:56px;border-radius:50%;font-size:1.5rem;box-shadow:0 4px 15px rgba(102,126,234,0.4);z-index:99}
+
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:10px 8px 24px;box-shadow:0 -4px 24px rgba(0,0,0,0.08);border-radius:24px 24px 0 0;z-index:100}
+.nav-btn{background:none;border:none;color:var(--text-light);padding:8px 14px;font-size:0.6rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:14px;font-family:inherit;transition:all 0.2s}
+.nav-btn svg{width:24px;height:24px}
+.nav-btn.active{color:var(--primary);background:linear-gradient(135deg,rgba(102,126,234,0.1),rgba(139,92,246,0.1))}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border:none;border-radius:14px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:white;box-shadow:0 4px 12px rgba(102,126,234,0.3)}
+.btn-success{background:linear-gradient(135deg,#10b981,#34d399);color:white}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#f87171);color:white}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:white}
+.btn-whatsapp{background:#25D366;color:white}
+.btn-outline{background:white;border:2px solid var(--border);color:var(--text)}
+.btn-small{padding:8px 14px;font-size:0.75rem}
+.btn-fab{position:fixed;bottom:100px;left:20px;width:60px;height:60px;border-radius:50%;font-size:1.5rem;box-shadow:0 6px 20px rgba(102,126,234,0.4);z-index:99}
+
 .form-group{margin-bottom:16px}
-.form-group label{display:block;font-weight:600;margin-bottom:6px;font-size:0.85rem}
-.form-input,.form-select{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:1rem;font-family:inherit;background:white}
+.form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:0.85rem;color:var(--text)}
+.form-input,.form-select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-size:1rem;font-family:inherit;background:white;transition:border-color 0.2s}
 .form-input:focus,.form-select:focus{outline:none;border-color:var(--primary)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
-.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:90vh;overflow:hidden}
-.modal-header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-.modal-header.admin{background:linear-gradient(135deg,#ef4444,#dc2626)}
-.modal-header.success{background:linear-gradient(135deg,#10b981,#34d399)}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal{background:white;border-radius:24px 24px 0 0;width:100%;max-width:500px;max-height:90vh;overflow:hidden;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+.modal-header.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.modal-header.success{background:linear-gradient(135deg,#10b981,#059669)}
+.modal-header.warning{background:linear-gradient(135deg,#f59e0b,#d97706)}
 .modal-title{font-weight:700;font-size:1.1rem}
-.modal-close{background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.modal-close{background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:1.3rem;cursor:pointer}
 .modal-body{padding:20px;max-height:70vh;overflow-y:auto}
 .modal-actions{display:flex;gap:10px;margin-top:20px}
 .modal-actions .btn{flex:1}
-.lock-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000}
-.lock-box{background:white;border-radius:20px;padding:30px;text-align:center;width:90%;max-width:320px}
-.pin-input{display:flex;justify-content:center;gap:10px;margin:20px 0}
-.pin-digit{width:45px;height:55px;border:2px solid var(--border);border-radius:10px;font-size:1.3rem;font-weight:700;text-align:center;font-family:inherit}
-.pin-digit:focus{outline:none;border-color:var(--primary)}
-.pin-error{color:var(--danger);font-size:0.8rem;display:none;margin-bottom:12px}
-.pin-error.show{display:block}
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3000}
-.loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
-.loading-text{color:white;margin-top:16px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.family-row{display:flex;gap:10px;overflow-x:auto;padding:8px 0}
-.family-avatar{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
-.family-avatar .icon{width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+
+.item-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:14px;margin-bottom:10px;transition:all 0.2s}
+.item-check{width:26px;height:26px;border:2px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s}
+.item-check.done{background:var(--success);border-color:var(--success);color:white}
+.item-check.round{border-radius:50%}
+.item-text{flex:1;font-weight:500}
+.item-text.done{text-decoration:line-through;opacity:0.6}
+.item-meta{font-size:0.7rem;color:var(--text-light);margin-top:2px}
+.item-delete{background:none;border:none;font-size:1.1rem;cursor:pointer;opacity:0.4;padding:4px}
+
+.family-row{display:flex;gap:12px;overflow-x:auto;padding:10px 0}
+.family-avatar{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0}
+.family-avatar .icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:transform 0.2s}
+.family-avatar:active .icon{transform:scale(0.95)}
 .family-avatar .name{font-size:0.7rem;font-weight:600}
 .member-avi{background:linear-gradient(135deg,#3b82f6,#60a5fa)}
 .member-ariela{background:linear-gradient(135deg,#ec4899,#f472b6)}
@@ -73,861 +85,1132 @@ body{font-family:'Rubik',sans-serif;background:#f1f5f9;min-height:100vh;directio
 .member-yuval{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
 .member-hillel{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
 .member-lior{background:linear-gradient(135deg,#06b6d4,#22d3ee)}
-.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-.quick-action{background:white;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-.quick-action .icon{font-size:1.3rem;margin-bottom:2px}
-.quick-action .label{font-size:0.6rem;font-weight:600}
-.item-row{display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px}
-.item-row.done{opacity:0.5}
-.item-check{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.item-check.done{background:var(--success);border-color:var(--success);color:white}
-.item-check.round{border-radius:50%}
-.item-text{flex:1;font-weight:500}
-.item-text.done{text-decoration:line-through}
-.item-meta{font-size:0.7rem;color:var(--text-light)}
-.item-delete{background:none;border:none;font-size:1rem;cursor:pointer;opacity:0.4;padding:4px}
-.item-badge{padding:2px 8px;border-radius:10px;font-size:0.65rem;font-weight:600}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin-bottom:12px}
-.tab{padding:8px 14px;border-radius:20px;background:var(--border);font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap;border:none;font-family:inherit}
-.tab.active{background:var(--primary);color:white}
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.more-item{background:white;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer}
-.more-item .icon{font-size:1.8rem;margin-bottom:6px}
-.more-item .label{font-size:0.75rem;font-weight:600}
-.more-item .desc{font-size:0.6rem;color:var(--text-light);margin-top:2px}
-.kid-card{background:white;border-radius:12px;padding:16px;margin-bottom:12px;border-right:4px solid var(--primary)}
-.car-card{background:white;border-radius:12px;padding:16px;margin-bottom:12px;border-right:4px solid var(--primary)}
-.car-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
-.car-stat:last-child{border-bottom:none}
-.date-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px;background:white;padding:12px;border-radius:12px}
-.date-nav button{background:var(--primary);color:white;border:none;width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer}
-.date-nav .date-text{font-weight:700;font-size:1rem;min-width:150px;text-align:center}
-.hidden{display:none!important}
-.empty{text-align:center;padding:30px;color:var(--text-light)}
-.empty .emoji{font-size:2.5rem;display:block;margin-bottom:12px}
-.divider{height:1px;background:var(--border);margin:16px 0}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:10px 0}
+.tab{padding:10px 18px;border-radius:25px;background:white;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;border:2px solid var(--border);font-family:inherit;transition:all 0.2s}
+.tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-color:transparent}
+
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.quick-action{background:white;border-radius:16px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:all 0.2s}
+.quick-action:active{transform:scale(0.96)}
+.quick-action .icon{font-size:1.6rem;margin-bottom:4px}
+.quick-action .label{font-size:0.65rem;font-weight:600;color:var(--text)}
+
+.leaderboard{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:20px;padding:20px;margin-bottom:16px;color:white}
+.leaderboard-title{font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.leaderboard-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.1);border-radius:12px;margin-bottom:8px}
+.leaderboard-rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem}
+.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.rank-2{background:linear-gradient(135deg,#9ca3af,#6b7280)}
+.rank-3{background:linear-gradient(135deg,#d97706,#b45309)}
+.leaderboard-points{margin-right:auto;font-size:1.2rem;font-weight:700}
+.goal-complete{background:rgba(16,185,129,0.3);border:2px solid #10b981}
+
+/* Athletic Track */
+.athletic-track{background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+.track-title{color:white;font-weight:700;font-size:1.1rem;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.track-oval{position:relative;width:100%;height:200px;background:#c41e3a;border-radius:100px;border:4px solid white;margin-bottom:16px}
+.track-inner{position:absolute;top:20px;left:20px;right:20px;bottom:20px;background:#065f46;border-radius:80px;border:2px solid white}
+.track-lanes{position:absolute;top:0;left:0;right:0;bottom:0}
+.track-lane{position:absolute;border:1px solid rgba(255,255,255,0.3);border-radius:100px}
+.runner{position:absolute;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 2px 8px rgba(0,0,0,0.4);transition:all 0.5s ease;z-index:10}
+.runner.finished{animation:bounce 0.5s ease}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.finish-flag{position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:2rem}
+.track-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.track-stat{background:rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;color:white}
+.track-stat-val{font-size:1.3rem;font-weight:700}
+.track-stat-label{font-size:0.65rem;opacity:0.8}
+
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:16px;color:white;text-align:center}
+.stat-card.success{background:linear-gradient(135deg,#10b981,#059669)}
+.stat-card.warning{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.stat-card.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.stat-card.purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.stat-value{font-size:1.8rem;font-weight:800}
+.stat-label{font-size:0.75rem;opacity:0.9;margin-top:4px}
+
 .badge{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:0.7rem;font-weight:600}
-.badge-success{background:#d1fae5;color:#166534}
+.badge-success{background:#d1fae5;color:#065f46}
 .badge-warning{background:#fef3c7;color:#92400e}
 .badge-danger{background:#fee2e2;color:#991b1b}
-.badge-info{background:#e0f2fe;color:#0369a1}
-.reward-card{padding:12px;border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
-.reward-card.bonus{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-right:4px solid var(--success)}
-.reward-card.punish{background:linear-gradient(135deg,#fee2e2,#fecaca);border-right:4px solid var(--danger)}
+.badge-purple{background:#ede9fe;color:#5b21b6}
+
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.more-item{background:white;border-radius:16px;padding:16px 12px;text-align:center;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.more-item:active{transform:scale(0.96)}
+.more-item .icon{font-size:2rem;margin-bottom:8px}
+.more-item .label{font-size:0.8rem;font-weight:600}
+
+.date-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px;background:white;padding:14px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.date-nav button{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;width:40px;height:40px;border-radius:50%;font-size:1.1rem;cursor:pointer}
+.date-nav .date-text{font-weight:700;font-size:1rem;min-width:160px;text-align:center}
+
+.request-card{padding:14px;border-radius:14px;margin-bottom:10px}
+.request-card.pending{background:linear-gradient(135deg,#fef3c7,#fde68a);border-right:4px solid var(--warning)}
+.request-card.approved{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-right:4px solid var(--success)}
+.request-card.rejected{background:linear-gradient(135deg,#fee2e2,#fecaca);border-right:4px solid var(--danger)}
+
+.transaction-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:12px;margin-bottom:8px}
+.transaction-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.transaction-income{background:#d1fae5}
+.transaction-expense{background:#fee2e2}
+.transaction-amount{font-weight:700;font-size:1.1rem}
+.transaction-amount.income{color:var(--success)}
+.transaction-amount.expense{color:var(--danger)}
+
+.prize-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.prize-icon{font-size:2rem}
+.prize-cost{background:var(--warning);color:white;padding:4px 12px;border-radius:20px;font-weight:700;font-size:0.85rem}
+
+.meal-card{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:8px}
+.meal-time{font-weight:700;color:var(--primary);margin-bottom:6px}
+.meal-items{font-size:0.9rem}
+
+.exam-card{background:linear-gradient(135deg,#fee2e2,#fecaca);border-radius:12px;padding:14px;margin-bottom:10px;border-right:4px solid var(--danger)}
+.exam-date{font-size:0.8rem;color:var(--danger);font-weight:600}
+.exam-subject{font-weight:700;font-size:1.1rem}
+
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3000}
+.loading-spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
+.loading-text{color:white;margin-top:20px;font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.lock-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(10px)}
+.lock-box{background:white;border-radius:24px;padding:32px;text-align:center;width:90%;max-width:320px}
+.pin-input{display:flex;justify-content:center;gap:12px;margin:24px 0}
+.pin-digit{width:50px;height:60px;border:2px solid var(--border);border-radius:14px;font-size:1.5rem;font-weight:700;text-align:center;font-family:inherit}
+.pin-digit:focus{outline:none;border-color:var(--primary)}
+
+.hidden{display:none!important}
+.empty{text-align:center;padding:32px;color:var(--text-light)}
+.empty .emoji{font-size:3rem;display:block;margin-bottom:14px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* Meals weekly view */
+.meals-week{display:grid;gap:12px}
+.meal-day-card{background:white;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.meal-day-title{font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.meal-day-title.today{color:var(--primary)}
+.meals-row{display:flex;gap:8px}
+.meal-slot{flex:1;background:var(--bg);border-radius:10px;padding:10px;min-height:60px}
+.meal-slot-title{font-size:0.7rem;font-weight:600;color:var(--text-light);margin-bottom:4px}
+.meal-slot-items{font-size:0.8rem}
 </style>
 </head>
 <body>
-<div class="loading-overlay" id="loading"><div class="loading-spinner"></div><div class="loading-text">🏠 טוען...</div></div>
-<div class="sync-badge online" id="sync-badge"><span id="sync-text">מחובר</span></div>
+<div class="loading-overlay" id="loading"><div class="loading-spinner"></div><div class="loading-text">🏠 טוען משפחת טקלה...</div></div>
+<div class="sync-badge online" id="sync-badge"><span id="sync-text">✓</span></div>
 <div id="role-badge"></div>
 <div class="app" id="app"></div>
+
 <nav class="nav">
 <button class="nav-btn active" onclick="nav('home')" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>בית</button>
-<button class="nav-btn" onclick="nav('shop')" data-view="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>קניות</button>
+<button class="nav-btn" onclick="nav('game')" data-view="game"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>משחק</button>
 <button class="nav-btn" onclick="nav('cal')" data-view="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>לו״ז</button>
 <button class="nav-btn" onclick="nav('tasks')" data-view="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>משימות</button>
 <button class="nav-btn" onclick="nav('more')" data-view="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>עוד</button>
 </nav>
-<div class="lock-overlay hidden" id="lock-overlay"><div class="lock-box"><div style="font-size:3rem;margin-bottom:12px">🔐</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">כניסת מנהל</div><div style="color:var(--text-light);font-size:0.85rem;margin-bottom:12px">הזן קוד (4 ספרות)</div><div class="pin-input"><input type="tel" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)"><input type="tel" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)"><input type="tel" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)"><input type="tel" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)"></div><div class="pin-error" id="pin-error">❌ קוד שגוי</div><button class="btn btn-outline" style="width:100%" onclick="closeLock()">ביטול</button></div></div>
-<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-header" id="modal-header"><span class="modal-title" id="modal-title">הוסף</span><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="modal-body" id="modal-body"></div></div></div>
+
+<div class="lock-overlay hidden" id="lock-overlay">
+<div class="lock-box">
+<div style="font-size:3.5rem;margin-bottom:16px">🔐</div>
+<div style="font-size:1.2rem;font-weight:700;margin-bottom:8px">כניסת מנהל</div>
+<div style="color:var(--text-light);font-size:0.9rem">הזן קוד PIN</div>
+<div class="pin-input">
+<input type="tel" class="pin-digit" maxlength="1" id="pin1" oninput="handlePin(1)" onkeydown="handlePinKey(event,1)">
+<input type="tel" class="pin-digit" maxlength="1" id="pin2" oninput="handlePin(2)" onkeydown="handlePinKey(event,2)">
+<input type="tel" class="pin-digit" maxlength="1" id="pin3" oninput="handlePin(3)" onkeydown="handlePinKey(event,3)">
+<input type="tel" class="pin-digit" maxlength="1" id="pin4" oninput="handlePin(4)" onkeydown="handlePinKey(event,4)">
+</div>
+<button class="btn btn-outline" style="width:100%" onclick="closeLock()">ביטול</button>
+</div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+<div class="modal" onclick="event.stopPropagation()">
+<div class="modal-header" id="modal-header">
+<span class="modal-title" id="modal-title">כותרת</span>
+<button class="modal-close" onclick="closeModal()">&times;</button>
+</div>
+<div class="modal-body" id="modal-body"></div>
+</div>
+</div>
+
 <script>
-try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){console.error(e);}
+// Firebase
+try{firebase.initializeApp({apiKey:"AIzaSyDZE0-OuAd_XiKTGy0lHsdhukraVYwEcAc",authDomain:"family-app-25459.firebaseapp.com",databaseURL:"https://family-app-25459-default-rtdb.firebaseio.com",projectId:"family-app-25459"});}catch(e){}
 const db=typeof firebase!=='undefined'&&firebase.database?firebase.database():null;
-const dataRef=db?db.ref('familyDataV3'):null;
+const dataRef=db?db.ref('familyDataV5'):null;
 const PIN='1234';
+const STORAGE_KEY='familyAppDataV5';
 
-// Timeout - if Firebase doesn't load in 5 seconds, continue without it
-let firebaseLoaded=false;
-setTimeout(function(){
-  if(!firebaseLoaded){
-    console.log('Firebase timeout - loading locally');
-    document.getElementById('loading').classList.add('hidden');
-    sync('offline');
-    render();
-  }
-},5000);
-
-const FAMILY=[{id:'avi',name:'אבא אבי',short:'אבי',icon:'👨',color:'#3b82f6',type:'parent',phone:''},{id:'ariela',name:'אמא אריאלה',short:'אריאלה',icon:'👩',color:'#ec4899',type:'parent',phone:''},{id:'oshari',name:'אושרי',short:'אושרי',icon:'👦',grade:'ד׳',color:'#10b981',type:'child',phone:''},{id:'yuval',name:'יובל',short:'יובל',icon:'👧',grade:'ו׳',color:'#8b5cf6',type:'child',phone:''},{id:'hillel',name:'הלל',short:'הלל',icon:'👧',grade:'ח׳',color:'#f59e0b',type:'child',phone:''},{id:'lior',name:'ליאור',short:'ליאור',icon:'👶',grade:'גן',color:'#06b6d4',type:'child',phone:''}];
+// Constants
+const FAMILY=[
+{id:'avi',name:'אבא אבי',short:'אבי',icon:'👨',color:'#3b82f6',type:'parent'},
+{id:'ariela',name:'אמא אריאלה',short:'אריאלה',icon:'👩',color:'#ec4899',type:'parent'},
+{id:'oshari',name:'אושרי',short:'אושרי',icon:'👦',grade:'ד׳',color:'#10b981',type:'child'},
+{id:'yuval',name:'יובל',short:'יובל',icon:'👧',grade:'ו׳',color:'#8b5cf6',type:'child'},
+{id:'hillel',name:'הלל',short:'הלל',icon:'👧',grade:'ח׳',color:'#f59e0b',type:'child'},
+{id:'lior',name:'ליאור',short:'ליאור',icon:'👶',grade:'גן',color:'#06b6d4',type:'child'}
+];
 const KIDS=FAMILY.filter(m=>m.type==='child');
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const TIMES=['05:00','06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
 const MEALS=['בוקר','צהריים','ערב'];
-const SHOP_CATS=[{id:'all',name:'הכל',icon:'📋'},{id:'food',name:'מזון',icon:'🥛'},{id:'produce',name:'ירקות ופירות',icon:'🥬'},{id:'meat',name:'בשר',icon:'🥩'},{id:'cleaning',name:'ניקיון',icon:'🧹'},{id:'disposable',name:'חד פעמי',icon:'🍽️'},{id:'hygiene',name:'היגיינה',icon:'🧴'},{id:'home',name:'לבית',icon:'🏠'}];
-const EVENT_TYPES=[{id:'event',name:'אירוע',icon:'📅',color:'#f59e0b'},{id:'exam',name:'מבחן',icon:'📝',color:'#ef4444'},{id:'doctor',name:'רופא',icon:'🏥',color:'#06b6d4'},{id:'birthday',name:'יום הולדת',icon:'🎂',color:'#ec4899'},{id:'trip',name:'טיול',icon:'🚗',color:'#10b981'},{id:'sport',name:'ספורט',icon:'⚽',color:'#3b82f6'},{id:'workout',name:'אימון',icon:'🏃',color:'#8b5cf6'},{id:'car',name:'רכב',icon:'🚗',color:'#64748b'},{id:'other',name:'אחר',icon:'📌',color:'#64748b'}];
-const WORKOUT_TYPES=['ריצה','הליכה','חדר כושר','שחייה','אופניים','יוגה','כדורסל','כדורגל','טניס','אחר'];
-const REWARD_TYPES=[{id:'money',name:'כסף',icon:'💰'},{id:'restaurant',name:'מסעדה',icon:'🍕'},{id:'movie',name:'סרט',icon:'🎬'},{id:'game',name:'משחק',icon:'🎮'},{id:'trip',name:'טיול',icon:'🎢'},{id:'screen',name:'זמן מסך',icon:'📱'},{id:'other',name:'אחר',icon:'🎁'}];
-const PUNISH_TYPES=[{id:'fine',name:'קנס',icon:'💸'},{id:'nophone',name:'ללא טלפון',icon:'📵'},{id:'nogame',name:'ללא משחקים',icon:'🎮'},{id:'noscreen',name:'ללא מסכים',icon:'📺'},{id:'chore',name:'משימה נוספת',icon:'🧹'},{id:'other',name:'אחר',icon:'⚠️'}];
+const EVENT_TYPES=[{id:'event',name:'אירוע',icon:'📅',color:'#667eea'},{id:'exam',name:'מבחן',icon:'📝',color:'#ef4444'},{id:'workout',name:'אימון',icon:'🏃',color:'#8b5cf6'},{id:'doctor',name:'רופא',icon:'🏥',color:'#06b6d4'},{id:'birthday',name:'יום הולדת',icon:'🎂',color:'#ec4899'},{id:'sport',name:'ספורט',icon:'⚽',color:'#10b981'}];
+
+// Default settings for points
+const DEFAULT_SETTINGS={
+  gradePoints:{100:10,95:8,90:6,85:4,80:2,75:0,70:0,65:0,60:0,0:0},
+  workoutPoints:5,
+  taskPoints:1,
+  stepsPerPoint:1000,
+  customActivities:[]
+};
+
+const DEFAULT_PRIZES=[
+{id:'p1',name:'גלידה',icon:'🍦',cost:20},{id:'p2',name:'סרט',icon:'🎬',cost:50},{id:'p3',name:'מסעדה',icon:'🍕',cost:100},
+{id:'p4',name:'משחק חדש',icon:'🎮',cost:150},{id:'p5',name:'טיול',icon:'🎢',cost:200},{id:'p6',name:'זמן מסך',icon:'📱',cost:30},
+{id:'p7',name:'לישון מאוחר',icon:'🌙',cost:25},{id:'p8',name:'בחירת ארוחה',icon:'🍽️',cost:15}
+];
 
 const DEFAULT={
   tasks:[],shopping:[],events:[],
-  money:{oshari:0,yuval:0,hillel:0,lior:0},
-  points:{oshari:0,yuval:0,hillel:0,lior:0},
+  points:{avi:0,ariela:0,oshari:0,yuval:0,hillel:0,lior:0},
   grades:{oshari:[],yuval:[],hillel:[]},
-  rewards:[],
-  phones:{avi:'',ariela:'',oshari:'',yuval:'',hillel:'',lior:''},
-  cars:[
-    {id:'car1',name:'רכב 1',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''},
-    {id:'car2',name:'רכב 2',plate:'',km:0,lastService:'',nextService:'',insurance:'',insuranceCompany:'',test:''}
-  ],
-  meals:{},workouts:[],
+  phones:{},
+  cars:[{id:'car1',name:'רכב 1',plate:'',km:0},{id:'car2',name:'רכב 2',plate:'',km:0}],
+  meals:{},workouts:[],completedWorkouts:[],
   schedules:{avi:{},ariela:{},oshari:{},yuval:{},hillel:{},lior:{}},
-  emergency:{contacts:[{name:'משטרה',phone:'100',icon:'🚔'},{name:'מד״א',phone:'101',icon:'🚑'},{name:'כיבוי',phone:'102',icon:'🚒'}]}
+  wallet:{oshari:{balance:0,transactions:[]},yuval:{balance:0,transactions:[]},hillel:{balance:0,transactions:[]},lior:{balance:0,transactions:[]}},
+  requests:[],
+  steps:{avi:{daily:0,goal:10000},ariela:{daily:0,goal:8000},oshari:{daily:0,goal:6000},yuval:{daily:0,goal:6000},hillel:{daily:0,goal:6000},lior:{daily:0,goal:3000}},
+  familyStepGoal:50000,
+  prizes:DEFAULT_PRIZES,
+  redeemedPrizes:[],
+  exams:{oshari:[],yuval:[],hillel:[]},
+  settings:{...DEFAULT_SETTINGS}
 };
 
 let D=JSON.parse(JSON.stringify(DEFAULT));
-let view='home',member=null,mTab='schedule',shopCat='all',calDate=new Date(),selDate=null,isAdmin=false,moreTab='main';
+let view='home',member=null,mTab='wallet',shopCat='all',calDate=new Date(),selDate=null,isAdmin=false,moreTab='main',gameTab='leaderboard';
 let homeDate=new Date();
 
-function sync(s){document.getElementById('sync-badge').className='sync-badge '+s;document.getElementById('sync-text').textContent=s==='online'?'✓':'⚠';}
-function save(){
-  if(!dataRef){sync('offline');return;}
-  sync('syncing');
-  dataRef.set(D).then(function(){sync('online');}).catch(function(){sync('offline');});
-}
+// LocalStorage
+function loadLocal(){try{const s=localStorage.getItem(STORAGE_KEY);if(s)return{...DEFAULT,...JSON.parse(s)};}catch(e){}return null;}
+function saveLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(D));}catch(e){}}
+
+let firebaseLoaded=false;
+setTimeout(()=>{if(!firebaseLoaded){const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();}},5000);
+
+function sync(s){document.getElementById('sync-badge').className='sync-badge '+s;document.getElementById('sync-text').textContent=s==='online'?'✓ מסונכרן':'💾 מקומי';}
+function save(){saveLocal();if(!dataRef){sync('offline');return;}sync('syncing');dataRef.set(D).then(()=>sync('online')).catch(()=>sync('offline'));}
 
 if(dataRef){
-  dataRef.on('value',function(snap){
+  dataRef.on('value',snap=>{
     firebaseLoaded=true;
     const v=snap.val();
-    if(v)D={...DEFAULT,...v};
+    if(v){D={...DEFAULT,...v};saveLocal();}
+    else{const l=loadLocal();if(l){D=l;dataRef.set(D);}}
     document.getElementById('loading').classList.add('hidden');
-    sync('online');
-    render();
-  },function(err){
-    console.error('Firebase error:',err);
-    firebaseLoaded=true;
-    document.getElementById('loading').classList.add('hidden');
-    sync('offline');
-    render();
-  });
-  dataRef.once('value').then(function(s){if(!s.val())dataRef.set(DEFAULT);}).catch(function(){});
-}else{
-  document.getElementById('loading').classList.add('hidden');
-  sync('offline');
-  render();
+    sync('online');render();
+  },()=>{firebaseLoaded=true;const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();});
+}else{const l=loadLocal();if(l)D=l;document.getElementById('loading').classList.add('hidden');sync('offline');render();}
+
+// Points calculation - FIXED
+function gradeToPoints(grade){
+  if(!D.settings)D.settings={...DEFAULT_SETTINGS};
+  const pts=D.settings.gradePoints||DEFAULT_SETTINGS.gradePoints;
+  // Find closest grade threshold
+  const thresholds=Object.keys(pts).map(Number).sort((a,b)=>b-a);
+  for(const t of thresholds){
+    if(grade>=t)return pts[t];
+  }
+  return 0;
 }
 
+function getStepPoints(mid){
+  const s=D.steps?.[mid]||{daily:0,goal:5000};
+  const perPt=D.settings?.stepsPerPoint||1000;
+  return Math.floor(s.daily/perPt);
+}
+
+function getWorkoutPoints(mid){
+  const completed=(D.completedWorkouts||[]).filter(w=>w.member===mid);
+  const ptsPerWorkout=D.settings?.workoutPoints||5;
+  return completed.length*ptsPerWorkout;
+}
+
+function getCustomActivityPoints(mid){
+  let pts=0;
+  (D.settings?.customActivities||[]).forEach(act=>{
+    const completions=(D.customActivityLog||[]).filter(l=>l.activityId===act.id&&l.member===mid);
+    pts+=completions.length*act.points;
+  });
+  return pts;
+}
+
+function getTotalPoints(mid){
+  let pts=D.points?.[mid]||0;
+  if(D.grades?.[mid])D.grades[mid].forEach(g=>{if(g.grade)pts+=gradeToPoints(g.grade);});
+  pts+=getStepPoints(mid);
+  pts+=getWorkoutPoints(mid);
+  pts+=getCustomActivityPoints(mid);
+  return pts;
+}
+
+// Leaderboard with goal completion priority
+function getLeaderboard(){
+  return FAMILY.map(m=>{
+    const s=D.steps?.[m.id]||{daily:0,goal:5000};
+    const goalComplete=s.daily>=s.goal;
+    const goalPct=s.goal>0?s.daily/s.goal:0;
+    return {...m,points:getTotalPoints(m.id),goalComplete,goalPct};
+  }).sort((a,b)=>{
+    // First by goal completion
+    if(a.goalComplete&&!b.goalComplete)return -1;
+    if(!a.goalComplete&&b.goalComplete)return 1;
+    // Then by points
+    return b.points-a.points;
+  });
+}
+
+// Navigation
 function nav(v){view=v;member=null;moreTab='main';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-view="${v}"]`)?.classList.add('active');render();}
-function showMember(id){member=id;mTab='schedule';render();}
+function showMember(id){member=id;mTab=FAMILY.find(m=>m.id===id)?.type==='child'?'wallet':'schedule';render();}
 function setMTab(t){mTab=t;render();}
 function setMoreTab(t){moreTab=t;render();}
+function setGameTab(t){gameTab=t;render();}
 
-function showLock(){document.getElementById('lock-overlay').classList.remove('hidden');['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');document.getElementById('pin-error').classList.remove('show');setTimeout(()=>document.getElementById('pin1').focus(),100);}
+// Lock
+function showLock(){document.getElementById('lock-overlay').classList.remove('hidden');['pin1','pin2','pin3','pin4'].forEach(id=>document.getElementById(id).value='');setTimeout(()=>document.getElementById('pin1').focus(),100);}
 function closeLock(){document.getElementById('lock-overlay').classList.add('hidden');}
-function handlePin(d){const i=document.getElementById('pin'+d);if(i.value&&d<4)document.getElementById('pin'+(d+1)).focus();const p=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(p.length===4){if(p===PIN){isAdmin=true;closeLock();updateBadge();render();}else{document.getElementById('pin-error').classList.add('show');document.querySelectorAll('.pin-digit').forEach(el=>{el.style.borderColor='var(--danger)';});setTimeout(()=>{document.querySelectorAll('.pin-digit').forEach(el=>{el.style.borderColor='';el.value='';});document.getElementById('pin1').focus();},500);}}}
+function handlePin(d){const i=document.getElementById('pin'+d);if(i.value&&d<4)document.getElementById('pin'+(d+1)).focus();const p=['pin1','pin2','pin3','pin4'].map(id=>document.getElementById(id).value).join('');if(p.length===4){if(p===PIN){isAdmin=true;closeLock();updateBadge();render();}else{document.querySelectorAll('.pin-digit').forEach(el=>{el.style.borderColor='var(--danger)';el.value='';});setTimeout(()=>{document.querySelectorAll('.pin-digit').forEach(el=>el.style.borderColor='');document.getElementById('pin1').focus();},300);}}}
 function handlePinKey(e,d){if(e.key==='Backspace'&&!e.target.value&&d>1)document.getElementById('pin'+(d-1)).focus();}
-function logout(){if(confirm('להתנתק?')){isAdmin=false;updateBadge();render();}}
-function updateBadge(){document.getElementById('role-badge').innerHTML=isAdmin?'<div class="admin-badge" onclick="logout()">👑 מנהל</div>':'<div class="user-badge" onclick="showLock()">🔓 מנהל</div>';}
+function logout(){isAdmin=false;updateBadge();render();}
+function updateBadge(){document.getElementById('role-badge').innerHTML=isAdmin?'<div class="admin-badge" onclick="logout()">👑 מנהל</div>':'<div class="user-badge" onclick="showLock()">🔓</div>';}
 
+// Modal
 function modal(title,content,type=''){document.getElementById('modal-title').textContent=title;document.getElementById('modal-header').className='modal-header'+(type?' '+type:'');document.getElementById('modal-body').innerHTML=content;document.getElementById('modal-overlay').classList.remove('hidden');}
 function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');}
-function fmtDate(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+
+// Utilities
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseDate(s){if(!s)return new Date();const[y,m,d]=s.split('-');return new Date(parseInt(y),parseInt(m)-1,parseInt(d));}
+function formatPhoneForWhatsApp(p){if(!p)return'';let n=p.replace(/[^0-9]/g,'');if(n.startsWith('0'))n='972'+n.substring(1);return n;}
+function getDayIdx(date){return(date||new Date()).getDay();}
 
-function render(){const app=document.getElementById('app');if(member)app.innerHTML=renderMember();else if(view==='home')app.innerHTML=renderHome();else if(view==='shop')app.innerHTML=renderShop();else if(view==='cal')app.innerHTML=renderCal();else if(view==='tasks')app.innerHTML=renderTasks();else if(view==='more')app.innerHTML=renderMore();else app.innerHTML=renderHome();}
+// Main render
+function render(){
+  const app=document.getElementById('app');
+  if(member)app.innerHTML=renderMember();
+  else if(view==='home')app.innerHTML=renderHome();
+  else if(view==='game')app.innerHTML=renderGame();
+  else if(view==='cal')app.innerHTML=renderCal();
+  else if(view==='tasks')app.innerHTML=renderTasks();
+  else if(view==='more')app.innerHTML=renderMore();
+  else app.innerHTML=renderHome();
+}
 
-function changeHomeDate(delta){homeDate.setDate(homeDate.getDate()+delta);render();}
-function goToday(){homeDate=new Date();render();}
-
+// HOME - Enhanced with meals, tasks, events, competition status
 function renderHome(){
-  const dateStr=homeDate.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const dayIdx=homeDate.getDay();
-  const todayDateStr=fmtDate(homeDate);
+  const dateStr=homeDate.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'});
+  const dayIdx=getDayIdx(homeDate);
+  const todayStr=fmtDate(homeDate);
+  const isToday=todayStr===fmtDate(new Date());
   
-  // Get events for this day
-  const dayEvents=(D.events||[]).filter(e=>e.date===todayDateStr).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  // Today's data
+  const dayEvents=(D.events||[]).filter(e=>e.date===todayStr).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const dayTasks=(D.tasks||[]).filter(t=>t.date===todayStr&&!t.done&&!t.recurring);
+  const pendingRequests=(D.requests||[]).filter(r=>r.status==='pending');
   
-  // Get workouts for this day
-  const dayWorkouts=(D.workouts||[]).filter(w=>w.day===dayIdx);
+  // Today's meals
+  const todayMeals=MEALS.map(meal=>({name:meal,items:D.meals?.[dayIdx+'-'+meal]||[]})).filter(m=>m.items.length>0);
   
-  // Get sports from schedules for this day
-  const sportFromSch=[];
-  FAMILY.forEach(m=>{
-    const sch=D.schedules?.[m.id]?.[dayIdx]||[];
-    sch.forEach(l=>{
-      if(l.s&&(l.s.includes('⚽')||l.s.includes('🏀')||l.s.includes('🎾')||l.s.includes('🏃'))){
-        sportFromSch.push({member:m.id,time:l.t,activity:l.s,memberName:m.short,memberIcon:m.icon});
-      }
-    });
-  });
+  // Competition status
+  const leaderboard=getLeaderboard();
+  const familySteps=FAMILY.reduce((sum,m)=>(D.steps?.[m.id]?.daily||0)+sum,0);
+  const familyGoal=D.familyStepGoal||50000;
+  const familyPct=Math.min(100,Math.round(familySteps/familyGoal*100));
   
-  const tasks=(D.tasks||[]).filter(t=>!t.done);
-  const shop=(D.shopping||[]).filter(s=>!s.done).slice(0,3);
-  
-  return `<div class="header"><h1>🏠 משפחת טקלה</h1></div>
-<div class="date-nav">
-  <button onclick="changeHomeDate(-1)">◀</button>
-  <div class="date-text">${dateStr}</div>
-  <button onclick="changeHomeDate(1)">▶</button>
+  return `
+<div class="header">
+<div class="header-row"><h1>🏠 משפחת טקלה</h1></div>
+<div class="header-sub">${isToday?'מה קורה היום?':dateStr}</div>
 </div>
-<div style="text-align:center;margin-bottom:16px"><button class="btn btn-small btn-outline" onclick="goToday()">היום</button></div>
+
+<div class="date-nav">
+<button onclick="homeDate.setDate(homeDate.getDate()-1);render()">◀</button>
+<div class="date-text">${dateStr}</div>
+<button onclick="homeDate.setDate(homeDate.getDate()+1);render()">▶</button>
+</div>
 
 <div class="quick-actions">
-<div class="quick-action" onclick="openAddShop()"><div class="icon">🛒</div><div class="label">קניות</div></div>
-<div class="quick-action" onclick="openAddEvent()"><div class="icon">📅</div><div class="label">אירוע</div></div>
 <div class="quick-action" onclick="openAddTask()"><div class="icon">✅</div><div class="label">משימה</div></div>
-<div class="quick-action" onclick="openAddWorkout()"><div class="icon">🏃</div><div class="label">אימון</div></div>
+<div class="quick-action" onclick="openAddEvent()"><div class="icon">📅</div><div class="label">אירוע</div></div>
+<div class="quick-action" onclick="openAddRequest()"><div class="icon">📨</div><div class="label">בקשה</div></div>
+<div class="quick-action" onclick="setMoreTab('shop');nav('more')"><div class="icon">🛒</div><div class="label">קניות</div></div>
 </div>
 
-<div class="card"><div class="card-header"><div class="card-title">👨‍👩‍👧‍👦 בני המשפחה</div></div><div class="family-row">${FAMILY.map(m=>`<div class="family-avatar" onclick="showMember('${m.id}')"><div class="icon member-${m.id}">${m.icon}</div><div class="name">${m.short}</div></div>`).join('')}</div></div>
+<!-- Competition Status -->
+<div class="card" style="background:linear-gradient(135deg,#1e1b4b,#312e81);color:white">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<span style="font-weight:700">🏆 סטטוס תחרות</span>
+<button class="btn btn-small" style="background:rgba(255,255,255,0.2);color:white" onclick="nav('game')">פרטים →</button>
+</div>
+<div style="display:flex;gap:12px">
+<div style="flex:1;background:rgba(255,255,255,0.1);padding:12px;border-radius:12px;text-align:center">
+<div style="font-size:1.5rem;font-weight:700">${familySteps.toLocaleString()}</div>
+<div style="font-size:0.7rem;opacity:0.8">צעדים</div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,0.1);padding:12px;border-radius:12px;text-align:center">
+<div style="font-size:1.5rem;font-weight:700">${familyPct}%</div>
+<div style="font-size:0.7rem;opacity:0.8">מהיעד</div>
+</div>
+<div style="flex:1;background:rgba(255,255,255,0.1);padding:12px;border-radius:12px;text-align:center">
+<div style="font-size:1.5rem;font-weight:700">${leaderboard[0]?.icon||'?'}</div>
+<div style="font-size:0.7rem;opacity:0.8">מוביל</div>
+</div>
+</div>
+</div>
 
-${dayEvents.length||dayWorkouts.length||sportFromSch.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">📅 לו״ז היום</div>
-${dayEvents.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const m=FAMILY.find(x=>x.id===e.member);const idx=D.events.indexOf(e);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-weight:600">${e.time||'-'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${m?m.icon+' '+m.short:'כולם'}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="shareToWhatsApp('event',D.events[${idx}])">📲</button></div>`;}).join('')}
-${dayWorkouts.map(w=>{const m=FAMILY.find(x=>x.id===w.member);return `<div class="item-row" style="border-right:3px solid #8b5cf6"><div style="min-width:50px;font-weight:600">${w.time}</div><div style="flex:1"><div style="font-weight:600">🏃 ${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''}</div></div></div>`;}).join('')}
-${sportFromSch.map(s=>`<div class="item-row" style="border-right:3px solid #3b82f6"><div style="min-width:50px;font-weight:600">${s.time}</div><div style="flex:1"><div style="font-weight:600">${s.activity}</div><div class="item-meta">${s.memberIcon} ${s.memberName} • מהמערכת</div></div></div>`).join('')}
-</div>`:'<div class="card"><div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים להיום</div></div>'}
+<!-- Family -->
+<div class="card">
+<div class="card-header"><div class="card-title">👨‍👩‍👧‍👦 בני המשפחה</div></div>
+<div class="family-row">${FAMILY.map(m=>`<div class="family-avatar" onclick="showMember('${m.id}')"><div class="icon member-${m.id}">${m.icon}</div><div class="name">${m.short}</div></div>`).join('')}</div>
+</div>
 
-${tasks.length?`<div class="card"><div class="card-header"><div class="card-title">✅ משימות</div><span class="badge badge-warning">${tasks.length}</span></div>${tasks.slice(0,3).map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join('')}</div>`:''}
+<!-- Today's Tasks -->
+${dayTasks.length?`
+<div class="card">
+<div class="card-header"><div class="card-title">✅ משימות להיום</div><span class="badge badge-warning">${dayTasks.length}</span></div>
+${dayTasks.slice(0,5).map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join('')}
+</div>`:''}
 
-${shop.length?`<div class="card"><div class="card-header"><div class="card-title">🛒 קניות</div></div>${shop.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}</div>`:''}`;}
+<!-- Today's Events -->
+${dayEvents.length?`
+<div class="card">
+<div class="card-header"><div class="card-title">📅 אירועים</div></div>
+${dayEvents.slice(0,5).map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const m=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-weight:600;font-size:0.85rem">${e.time||'--:--'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${m?m.icon+' '+m.short:'כולם'}</div></div></div>`;}).join('')}
+</div>`:''}
+
+<!-- Today's Meals -->
+${todayMeals.length?`
+<div class="card">
+<div class="card-header"><div class="card-title">🍽️ ארוחות היום</div></div>
+${todayMeals.map(m=>`<div class="meal-card"><div class="meal-time">${m.name==='בוקר'?'🌅':m.name==='צהריים'?'☀️':'🌙'} ${m.name}</div><div class="meal-items">${m.items.map(i=>i.name).join(', ')}</div></div>`).join('')}
+</div>`:''}
+
+<!-- Pending Requests -->
+${pendingRequests.length?`
+<div class="card">
+<div class="card-header"><div class="card-title">📨 בקשות ממתינות</div><span class="badge badge-warning">${pendingRequests.length}</span></div>
+${pendingRequests.slice(0,3).map(r=>{const from=FAMILY.find(x=>x.id===r.from);return `<div class="request-card pending"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:1.5rem">${from?.icon||'👤'}</span><div style="flex:1"><div style="font-weight:600">${r.title}</div><div style="font-size:0.75rem;color:var(--text-light)">${from?.short}</div></div>${isAdmin?`<button class="btn btn-small btn-success" onclick="approveRequest(${r.id})">✓</button><button class="btn btn-small btn-danger" onclick="rejectRequest(${r.id})">✕</button>`:''}</div></div>`;}).join('')}
+</div>`:''}
+`;
+}
+
+// GAME TAB
+function renderGame(){
+  return `
+<div class="header"><h1>🎮 משחק משפחתי</h1><div class="header-sub">תתחרו, צברו נקודות וזכו בפרסים!</div></div>
+
+<div class="tabs">
+<button class="tab ${gameTab==='leaderboard'?'active':''}" onclick="setGameTab('leaderboard')">🏆 דירוג</button>
+<button class="tab ${gameTab==='race'?'active':''}" onclick="setGameTab('race')">🏃 מרוץ</button>
+<button class="tab ${gameTab==='prizes'?'active':''}" onclick="setGameTab('prizes')">🎁 פרסים</button>
+<button class="tab ${gameTab==='settings'?'active':''}" onclick="setGameTab('settings')">⚙️ הגדרות</button>
+</div>
+
+${gameTab==='leaderboard'?renderLeaderboard():''}
+${gameTab==='race'?renderRace():''}
+${gameTab==='prizes'?renderPrizes():''}
+${gameTab==='settings'?renderGameSettings():''}
+`;
+}
+
+function renderLeaderboard(){
+  const leaderboard=getLeaderboard();
+  return `
+<div class="leaderboard">
+<div class="leaderboard-title">🏆 טבלת הניקוד</div>
+${leaderboard.map((m,i)=>`<div class="leaderboard-item ${m.goalComplete?'goal-complete':''}"><div class="leaderboard-rank ${i<3?'rank-'+(i+1):''}" style="${i>=3?'background:rgba(255,255,255,0.2)':''}">${i+1}</div><div class="member-${m.id}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">${m.icon}</div><div style="flex:1"><div style="font-weight:600">${m.name}${m.goalComplete?' ✅':''}</div><div style="font-size:0.7rem;opacity:0.8">${m.goalComplete?'השלים יעד!':Math.round(m.goalPct*100)+'% מהיעד'}</div></div><div class="leaderboard-points">⭐ ${m.points}</div></div>`).join('')}
+</div>
+
+<div class="card">
+<div class="card-title" style="margin-bottom:12px">📊 מקורות נקודות</div>
+<div class="item-row"><span style="font-size:1.2rem">✅</span><div style="flex:1">משימה</div><span class="badge badge-success">+${D.settings?.taskPoints||1}</span></div>
+<div class="item-row"><span style="font-size:1.2rem">🏃</span><div style="flex:1">אימון</div><span class="badge badge-purple">+${D.settings?.workoutPoints||5}</span></div>
+<div class="item-row"><span style="font-size:1.2rem">👟</span><div style="flex:1">כל ${D.settings?.stepsPerPoint||1000} צעדים</div><span class="badge badge-info">+1</span></div>
+<div class="item-row"><span style="font-size:1.2rem">📝</span><div style="flex:1">ציון 100</div><span class="badge badge-warning">+${D.settings?.gradePoints?.[100]||10}</span></div>
+</div>
+`;
+}
+
+function renderRace(){
+  const familySteps=FAMILY.reduce((sum,m)=>(D.steps?.[m.id]?.daily||0)+sum,0);
+  const familyGoal=D.familyStepGoal||50000;
+  const runners=FAMILY.map(m=>{
+    const s=D.steps?.[m.id]||{daily:0,goal:5000};
+    const pct=Math.min(100,Math.round(s.daily/s.goal*100));
+    return {...m,steps:s.daily,goal:s.goal,pct,finished:pct>=100};
+  }).sort((a,b)=>b.pct-a.pct);
+  
+  return `
+<div class="athletic-track">
+<div class="track-title">
+<span>🏟️ מרוץ הצעדים</span>
+<button class="btn btn-small" style="background:rgba(255,255,255,0.2);color:white" onclick="openEditSteps()">עדכן צעדים</button>
+</div>
+
+<div class="track-oval">
+<div class="track-inner"></div>
+${[0,1,2,3,4,5].map(i=>`<div class="track-lane" style="top:${i*8+8}px;left:${i*8+8}px;right:${i*8+8}px;bottom:${i*8+8}px"></div>`).join('')}
+<div class="finish-flag">🏁</div>
+${runners.map((r,i)=>{
+  const angle=-90+(r.pct/100)*360;
+  const rad=angle*Math.PI/180;
+  const radius=70-i*10;
+  const x=50+radius*Math.cos(rad)*0.8;
+  const y=50+radius*Math.sin(rad)*0.8;
+  return `<div class="runner member-${r.id} ${r.finished?'finished':''}" style="top:${y}%;left:${x}%;transform:translate(-50%,-50%)">${r.icon}</div>`;
+}).join('')}
+</div>
+
+<div class="track-stats">
+<div class="track-stat"><div class="track-stat-val">${familySteps.toLocaleString()}</div><div class="track-stat-label">צעדים</div></div>
+<div class="track-stat"><div class="track-stat-val">${Math.round(familySteps/familyGoal*100)}%</div><div class="track-stat-label">מהיעד</div></div>
+<div class="track-stat"><div class="track-stat-val">${runners.filter(r=>r.finished).length}/${runners.length}</div><div class="track-stat-label">סיימו</div></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">🎯 התקדמות</div>${isAdmin?`<button class="btn btn-small btn-primary" onclick="openEditGoals()">ערוך יעדים</button>`:''}</div>
+${runners.map(r=>`<div class="item-row" style="${r.finished?'background:#d1fae5':''}"><div class="member-${r.id}" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center">${r.icon}</div><div style="flex:1"><div style="font-weight:600">${r.short} ${r.finished?'🏆':''}</div><div style="height:8px;background:#e5e7eb;border-radius:4px;margin-top:4px"><div style="height:100%;width:${r.pct}%;background:${r.finished?'var(--success)':'var(--primary)'};border-radius:4px"></div></div></div><div style="text-align:left;min-width:80px"><div style="font-weight:700">${r.steps.toLocaleString()}</div><div style="font-size:0.7rem;color:var(--text-light)">/${r.goal.toLocaleString()}</div></div></div>`).join('')}
+</div>
+
+<div class="card">
+<div style="background:#e0f2fe;padding:12px;border-radius:12px;font-size:0.85rem">
+<div style="font-weight:600;margin-bottom:6px">📱 איך לקבל צעדים מהטלפון?</div>
+<div style="color:var(--text-light)">פתח את אפליקציית הבריאות בטלפון, בדוק את הצעדים שלך, וחזור לכאן להזין אותם ידנית.</div>
+</div>
+</div>
+`;
+}
+
+function renderPrizes(){
+  const prizes=D.prizes||DEFAULT_PRIZES;
+  return `
+<div class="card">
+<div class="card-header"><div class="card-title">🎁 פרסים</div>${isAdmin?`<button class="btn btn-small btn-primary" onclick="openAddPrize()">+ הוסף</button>`:''}</div>
+${prizes.map(p=>`<div class="prize-card"><div class="prize-icon">${p.icon}</div><div style="flex:1;font-weight:600">${p.name}</div><div class="prize-cost">⭐ ${p.cost}</div><button class="btn btn-small btn-success" onclick="openRedeemPrize('${p.id}')">ממש</button></div>`).join('')}
+</div>
+
+<div class="card">
+<div class="card-title" style="margin-bottom:12px">🎉 מומשו לאחרונה</div>
+${(D.redeemedPrizes||[]).slice(-5).reverse().map(r=>{const m=FAMILY.find(x=>x.id===r.member);const p=prizes.find(x=>x.id===r.prizeId)||{name:r.prizeName,icon:'🎁'};return `<div class="item-row"><span style="font-size:1.3rem">${p.icon}</span><div style="flex:1"><div style="font-weight:600">${p.name}</div><div class="item-meta">${m?.icon} ${m?.short} • ${r.date}</div></div></div>`;}).join('')||'<div class="empty" style="padding:16px">אין עדיין</div>'}
+</div>
+`;
+}
+
+function renderGameSettings(){
+  if(!D.settings)D.settings={...DEFAULT_SETTINGS};
+  const s=D.settings;
+  return `
+<div class="card">
+<div class="card-title" style="margin-bottom:16px">⚙️ הגדרות נקודות</div>
+
+<div class="form-group"><label>נקודות למשימה</label>
+<input type="number" class="form-input" value="${s.taskPoints||5}" onchange="D.settings.taskPoints=parseInt(this.value);save();render()"></div>
+
+<div class="form-group"><label>נקודות לאימון</label>
+<input type="number" class="form-input" value="${s.workoutPoints||5}" onchange="D.settings.workoutPoints=parseInt(this.value);save();render()"></div>
+
+<div class="form-group"><label>צעדים לנקודה</label>
+<input type="number" class="form-input" value="${s.stepsPerPoint||1000}" onchange="D.settings.stepsPerPoint=parseInt(this.value);save();render()"></div>
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">📊 נקודות לציונים</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+${[100,95,90,85,80,75,70,65,60].map(g=>`<div style="display:flex;align-items:center;gap:8px"><span style="min-width:40px;font-weight:600">${g}</span><input type="number" class="form-input" style="padding:8px" value="${s.gradePoints?.[g]||0}" onchange="if(!D.settings.gradePoints)D.settings.gradePoints={};D.settings.gradePoints[${g}]=parseInt(this.value);save();render()"></div>`).join('')}
+</div>
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">🎯 פעילויות מותאמות</div><button class="btn btn-small btn-primary" onclick="openAddCustomActivity()">+ הוסף</button></div>
+${(s.customActivities||[]).length?s.customActivities.map((a,i)=>`<div class="item-row"><span style="font-size:1.3rem">${a.icon}</span><div style="flex:1"><div style="font-weight:600">${a.name}</div><div class="item-meta">+${a.points} נקודות</div></div><button class="item-delete" onclick="D.settings.customActivities.splice(${i},1);save();render()">🗑️</button></div>`).join(''):'<div class="empty" style="padding:16px">אין פעילויות מותאמות</div>'}
+</div>
+`;
+}
+
+// MEMBER PAGE
+function renderMember(){
+  const m=FAMILY.find(x=>x.id===member);
+  const isChild=m.type==='child';
+  const wallet=D.wallet?.[member]||{balance:0,transactions:[]};
+  const pts=getTotalPoints(member);
+  const steps=D.steps?.[member]||{daily:0,goal:5000};
+  
+  return `
+<div class="header" style="padding-bottom:12px"><button onclick="member=null;render()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 16px;border-radius:10px;cursor:pointer;font-family:inherit">← חזרה</button></div>
+
+<div style="display:flex;align-items:center;gap:16px;padding:20px;background:white;border-radius:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+<div class="member-${m.id}" style="width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 4px 15px rgba(0,0,0,0.15)">${m.icon}</div>
+<div style="flex:1"><div style="font-size:1.3rem;font-weight:700">${m.name}</div><div style="color:var(--text-light)">${m.grade?'כיתה '+m.grade:m.type==='parent'?'הורה':''}</div></div>
+<div style="text-align:center"><div style="font-size:1.5rem;font-weight:800;color:var(--primary)">⭐ ${pts}</div><div style="font-size:0.7rem;color:var(--text-light)">נקודות</div></div>
+</div>
+
+<div class="stats-grid">
+${isChild?`<div class="stat-card success"><div class="stat-value">₪${wallet.balance}</div><div class="stat-label">יתרה</div></div>`:''}
+<div class="stat-card purple"><div class="stat-value">${steps.daily.toLocaleString()}</div><div class="stat-label">צעדים</div></div>
+</div>
+
+<div class="tabs">
+${isChild?`<button class="tab ${mTab==='wallet'?'active':''}" onclick="setMTab('wallet')">💰 ארנק</button>`:''}
+<button class="tab ${mTab==='schedule'?'active':''}" onclick="setMTab('schedule')">📅 מערכת</button>
+<button class="tab ${mTab==='tasks'?'active':''}" onclick="setMTab('tasks')">✅ משימות</button>
+${isChild&&m.grade!=='גן'?`<button class="tab ${mTab==='exams'?'active':''}" onclick="setMTab('exams')">📝 מבחנים</button>`:''}
+<button class="tab ${mTab==='workouts'?'active':''}" onclick="setMTab('workouts')">🏃 אימונים</button>
+</div>
+
+${mTab==='wallet'&&isChild?renderWallet(wallet):''}
+${mTab==='schedule'?renderSchedule(m):''}
+${mTab==='tasks'?renderMemberTasks():''}
+${mTab==='exams'?renderMemberExams():''}
+${mTab==='workouts'?renderMemberWorkouts():''}
+`;
+}
+
+function renderWallet(wallet){
+  return `
+<div class="card">
+<div class="card-header"><div class="card-title">💰 ארנק</div>${isAdmin?`<button class="btn btn-small btn-success" onclick="openAddTransaction('${member}','income')">+ הכנסה</button><button class="btn btn-small btn-danger" style="margin-right:8px" onclick="openAddTransaction('${member}','expense')">- הוצאה</button>`:''}</div>
+<div style="text-align:center;padding:20px;background:linear-gradient(135deg,#10b981,#059669);border-radius:16px;color:white;margin-bottom:16px"><div style="font-size:2.5rem;font-weight:800">₪${wallet.balance}</div></div>
+${wallet.transactions?.length?wallet.transactions.slice(-8).reverse().map(t=>`<div class="transaction-item"><div class="transaction-icon ${t.type==='income'?'transaction-income':'transaction-expense'}">${t.type==='income'?'📥':'📤'}</div><div style="flex:1"><div style="font-weight:600">${t.desc||'-'}</div><div style="font-size:0.75rem;color:var(--text-light)">${t.date}</div></div><div class="transaction-amount ${t.type}">${t.type==='income'?'+':'-'}₪${t.amount}</div></div>`).join(''):'<div class="empty" style="padding:16px">אין תנועות</div>'}
+</div>
+`;
+}
+
+function renderSchedule(m){
+  const sch=D.schedules?.[m.id]||{};
+  const times=['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+  return `
+<div class="card">
+<div class="card-title" style="margin-bottom:12px">📅 מערכת שעות</div>
+<div style="overflow-x:auto"><table style="width:100%;min-width:500px;border-collapse:collapse;font-size:0.65rem">
+<thead><tr><th style="background:var(--primary);color:white;padding:8px;border-radius:8px 0 0 0">שעה</th>${DAYS.map((d,i)=>`<th style="background:${i===6?'#94a3b8':'var(--primary)'};color:white;padding:8px;${i===6?'border-radius:0 8px 0 0':''}">${d}</th>`).join('')}</tr></thead>
+<tbody>${times.map(time=>`<tr><td style="background:var(--bg);padding:6px;font-weight:600;text-align:center">${time}</td>${[0,1,2,3,4,5,6].map(day=>{const l=(sch[day]||[]).find(x=>x.t===time);return `<td style="padding:4px;border:1px solid var(--border);text-align:center;cursor:pointer;${l?'background:rgba(102,126,234,0.15);font-weight:600':''}" onclick="editLesson('${member}',${day},'${time}')">${l?.s||''}</td>`;}).join('')}</tr>`).join('')}</tbody>
+</table></div>
+</div>
+`;
+}
+
+function renderMemberTasks(){
+  const recurring=(D.tasks||[]).filter(t=>t.kid===member&&t.recurring);
+  const regular=(D.tasks||[]).filter(t=>t.kid===member&&!t.recurring&&!t.done);
+  const done=(D.tasks||[]).filter(t=>t.kid===member&&t.done);
+  return `
+<div class="card">
+<div class="card-header"><div class="card-title">✅ משימות קבועות</div></div>
+${recurring.length?recurring.map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join(''):'<div class="empty" style="padding:16px">אין משימות קבועות</div>'}
+</div>
+<div class="card">
+<div class="card-header"><div class="card-title">📋 משימות פתוחות</div></div>
+${regular.length?regular.map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join(''):'<div class="empty" style="padding:16px">🎉 אין משימות!</div>'}
+</div>
+${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו</div>${done.slice(-5).map((t,i)=>renderTask(t,D.tasks.indexOf(t))).join('')}</div>`:''}
+`;
+}
+
+function renderMemberExams(){
+  const exams=D.exams?.[member]||[];
+  const upcoming=exams.filter(e=>parseDate(e.date)>=new Date()&&!e.grade).sort((a,b)=>a.date.localeCompare(b.date));
+  const graded=exams.filter(e=>e.grade!==undefined).sort((a,b)=>b.date?.localeCompare(a.date));
+  const avg=graded.length?Math.round(graded.reduce((s,e)=>s+e.grade,0)/graded.length):0;
+  
+  return `
+<div class="card">
+<div class="card-header"><div class="card-title">📝 לוח מבחנים</div><button class="btn btn-small btn-primary" onclick="openAddExam('${member}')">+ הוסף</button></div>
+${upcoming.length?upcoming.map(e=>`<div class="exam-card"><div class="exam-date">📅 ${parseDate(e.date).toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'short'})}</div><div class="exam-subject">${e.subject}</div>${e.notes?`<div style="font-size:0.8rem;color:var(--text-light);margin-top:4px">${e.notes}</div>`:''}<button class="btn btn-small btn-warning" style="margin-top:8px" onclick="openEnterGrade('${member}',${e.id})">הזן ציון</button></div>`).join(''):'<div class="empty" style="padding:16px">אין מבחנים קרובים</div>'}
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">📊 ציונים</div>${avg?`<span class="badge badge-${avg>=80?'success':avg>=60?'warning':'danger'}">ממוצע: ${avg}</span>`:''}</div>
+${graded.length?graded.map(e=>{const pts=gradeToPoints(e.grade);return `<div class="item-row" style="border-right:4px solid ${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${e.subject}</div><div class="item-meta">${e.date||''}</div></div><div style="text-align:left"><div style="font-size:1.3rem;font-weight:700;color:${e.grade>=80?'var(--success)':e.grade>=60?'var(--warning)':'var(--danger)'}">${e.grade}</div><div style="font-size:0.7rem;color:var(--text-light)">+${pts} נק'</div></div></div>`;}).join(''):'<div class="empty" style="padding:16px">אין ציונים</div>'}
+</div>
+`;
+}
+
+function renderMemberWorkouts(){
+  const scheduled=(D.workouts||[]).filter(w=>w.member===member);
+  const completed=(D.completedWorkouts||[]).filter(w=>w.member===member);
+  const ptsPerWorkout=D.settings?.workoutPoints||5;
+  
+  return `
+<div class="card">
+<div class="card-header"><div class="card-title">🏃 אימונים קבועים</div><button class="btn btn-small btn-primary" onclick="openAddWorkout('${member}')">+ הוסף</button></div>
+${scheduled.length?scheduled.map((w,i)=>`<div class="item-row" style="border-right:3px solid #8b5cf6"><span style="font-size:1.3rem">🏃</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${DAYS[w.day]} ${w.time}</div></div><button class="btn btn-small btn-success" onclick="logWorkout('${member}','${w.activity}')">✓ בוצע</button><button class="item-delete" onclick="D.workouts.splice(${D.workouts.indexOf(w)},1);save();render()">🗑️</button></div>`).join(''):'<div class="empty" style="padding:16px">אין אימונים קבועים</div>'}
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">✅ אימונים שבוצעו</div><span class="badge badge-purple">+${completed.length*ptsPerWorkout} נק'</span></div>
+${completed.length?completed.slice(-8).reverse().map(w=>`<div class="item-row"><span style="font-size:1.2rem">🏆</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${w.date}</div></div><span class="badge badge-success">+${ptsPerWorkout}</span></div>`).join(''):'<div class="empty" style="padding:16px">אין אימונים שנרשמו</div>'}
+</div>
+`;
+}
+
+// CALENDAR - synced with exams and workouts
+function renderCal(){
+  const y=calDate.getFullYear(),mon=calDate.getMonth();
+  const mName=calDate.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
+  const first=new Date(y,mon,1),last=new Date(y,mon+1,0);
+  const startDay=first.getDay(),daysInMonth=last.getDate();
+  const todayStr=fmtDate(new Date());
+  const cells=[];
+  const prev=new Date(y,mon,0);
+  for(let i=startDay-1;i>=0;i--)cells.push({d:prev.getDate()-i,other:true});
+  
+  // Collect all events, exams, scheduled workouts
+  const allEvents=[...(D.events||[])];
+  // Add exams as events
+  Object.entries(D.exams||{}).forEach(([kid,exams])=>{
+    exams.forEach(e=>{if(e.date)allEvents.push({date:e.date,title:e.subject,type:'exam',member:kid});});
+  });
+  // Add workouts as events (for today's day of week)
+  
+  for(let i=1;i<=daysInMonth;i++){
+    const dt=new Date(y,mon,i),ds=fmtDate(dt);
+    const dayEvents=allEvents.filter(e=>e.date===ds);
+    cells.push({d:i,date:ds,today:ds===todayStr,events:dayEvents,shabbat:dt.getDay()===6});
+  }
+  while(cells.length<42)cells.push({d:cells.length-daysInMonth-startDay+2,other:true});
+  
+  const selEv=selDate?allEvents.filter(e=>e.date===selDate).sort((a,b)=>(a.time||'').localeCompare(b.time||'')):[];
+  
+  return `
+<div class="header"><h1>📅 לוח שנה</h1></div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()-1);selDate=null;render()">◀</button>
+<div style="font-weight:700;font-size:1.1rem">${mName}</div>
+<button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()+1);selDate=null;render()">▶</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((d,i)=>`<div style="text-align:center;font-size:0.75rem;font-weight:600;color:${i===6?'var(--primary)':'var(--text-light)'};padding:10px 0">${d}</div>`).join('')}
+${cells.map(c=>{
+  const hasExam=c.events?.some(e=>e.type==='exam');
+  const hasEvent=c.events?.some(e=>e.type!=='exam');
+  return `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:12px;font-size:0.9rem;cursor:pointer;position:relative;${c.other?'color:#cbd5e1;':c.today?'background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-weight:700;':c.shabbat?'background:var(--bg);':''}${c.date===selDate?'box-shadow:0 0 0 2px var(--primary);':''}" onclick="${c.date?`selDate='${c.date}';render()`:''}"><span>${c.d}</span>${hasExam?`<span style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:0.5rem">📝</span>`:hasEvent?`<span style="position:absolute;bottom:4px;width:6px;height:6px;background:${c.today?'white':'var(--warning)'};border-radius:50%"></span>`:''}</div>`;
+}).join('')}
+</div>
+</div>
+${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+ הוסף</button></div>${selEv.length?selEv.map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.8rem;color:var(--text-light)">${e.time||'--:--'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div></div>`;}).join(''):'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין אירועים</div>'}</div>`:''}
+<button class="btn btn-primary btn-fab" onclick="openAddEvent()">+</button>
+`;
+}
+
+// TASKS - with recurring distinction
+function renderTasks(){
+  const tasks=D.tasks||[];
+  const recurring=tasks.filter(t=>t.recurring);
+  const regular=tasks.filter(t=>!t.recurring&&!t.done);
+  const done=tasks.filter(t=>t.done);
+  
+  return `
+<div class="header"><h1>✅ משימות</h1><div class="header-sub">${regular.length} משימות פתוחות</div></div>
+
+<div class="tabs">
+<button class="tab active" onclick="">📋 הכל</button>
+</div>
+
+<div class="card">
+<div class="card-header"><div class="card-title">📋 משימות מזדמנות</div><button class="btn btn-small btn-primary" onclick="openAddTask()">+ הוסף</button></div>
+${regular.length?regular.map((t,i)=>renderTask(t,tasks.indexOf(t))).join(''):'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין משימות!</div>'}
+</div>
+
+${recurring.length?`<div class="card"><div class="card-header"><div class="card-title">🔄 משימות קבועות</div></div><div style="color:var(--text-light);font-size:0.85rem;margin-bottom:12px">משימות קבועות מופיעות בעמודים האישיים</div>${recurring.slice(0,5).map((t,i)=>{const m=FAMILY.find(x=>x.id===t.kid);return `<div class="item-row"><span style="font-size:1.2rem">🔄</span><div style="flex:1"><div style="font-weight:600">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''}</div></div></div>`;}).join('')}</div>`:''}
+
+${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו (${done.length})</div>${done.slice(-5).map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>`:''}
+<button class="btn btn-primary btn-fab" onclick="openAddTask()">+</button>
+`;
+}
+
+function renderTask(t,idx){
+  const m=FAMILY.find(x=>x.id===t.kid);
+  const pts=t.points||D.settings?.taskPoints||5;
+  return `<div class="item-row" style="border-right:4px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ⭐+${pts}${t.date?' • '+t.date.split('-').reverse().slice(0,2).join('/'):''}</div></div><button class="item-delete" onclick="deleteTask(${idx})">🗑️</button></div>`;
+}
+
+function toggleTask(idx){
+  D.tasks[idx].done=!D.tasks[idx].done;
+  if(D.tasks[idx].done){
+    const t=D.tasks[idx];
+    const pts=t.points||D.settings?.taskPoints||5;
+    D.points[t.kid]=(D.points[t.kid]||0)+pts;
+  }
+  save();render();
+}
+function deleteTask(idx){D.tasks.splice(idx,1);save();render();}
+
+// MORE
+function renderMore(){
+  if(moreTab==='shop')return renderShop();
+  if(moreTab==='phones')return renderPhones();
+  if(moreTab==='meals')return renderMeals();
+  return `
+<div class="header"><h1>⚡ עוד</h1></div>
+<div class="more-grid">
+<div class="more-item" onclick="showEmergency()"><div class="icon">🚨</div><div class="label">חירום</div></div>
+<div class="more-item" onclick="setMoreTab('shop')"><div class="icon">🛒</div><div class="label">קניות</div></div>
+<div class="more-item" onclick="setMoreTab('phones')"><div class="icon">📱</div><div class="label">טלפונים</div></div>
+<div class="more-item" onclick="setMoreTab('meals')"><div class="icon">🍽️</div><div class="label">ארוחות</div></div>
+</div>
+`;
+}
 
 function renderShop(){
   const items=D.shopping||[];
-  const filtered=shopCat==='all'?items:items.filter(s=>s.cat===shopCat);
-  const pending=filtered.filter(s=>!s.done),done=filtered.filter(s=>s.done);
-  const counts={};SHOP_CATS.forEach(c=>counts[c.id]=c.id==='all'?items.filter(s=>!s.done).length:items.filter(s=>s.cat===c.id&&!s.done).length);
-  return `<div class="header"><h1>🛒 רשימת קניות</h1></div>
-<div class="card"><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" class="form-input" id="quick-shop" placeholder="הוסף פריט..." onkeypress="if(event.key==='Enter')quickShop()" style="flex:1"><button class="btn btn-primary" onclick="quickShop()">+</button></div>
-<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px">${SHOP_CATS.map(c=>`<div class="tab ${shopCat===c.id?'active':''}" onclick="shopCat='${c.id}';render()">${c.icon}${counts[c.id]?` (${counts[c.id]})`:''}</div>`).join('')}</div></div>
-${pending.length?`<div class="card"><div class="card-header"><div class="card-title">📋 לקנות</div><button class="btn btn-small" style="background:#25D366;color:white" onclick="shareToWhatsApp('shopping',D.shopping.filter(s=>!s.done))">📲 שלח הכל</button></div>${pending.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}</div>`:''}
-${!pending.length&&!done.length?'<div class="card"><div class="empty"><span class="emoji">🛒</span>ריק</div></div>':''}
-${done.length?`<div class="card"><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:8px">נקנו (${done.length})</div>${done.map((s,i)=>renderShopItem(s,D.shopping.indexOf(s))).join('')}<button class="btn btn-small btn-outline" onclick="D.shopping=D.shopping.filter(s=>!s.done);save();render()">🗑️ נקה</button></div>`:''}
-<button class="btn btn-primary btn-fab" onclick="openAddShop()">+</button>`;}
+  const pending=items.filter(s=>!s.done),done=items.filter(s=>s.done);
+  return `
+<div class="header"><h1>🛒 קניות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="card">
+<div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" class="form-input" id="quick-shop" placeholder="הוסף פריט..." onkeypress="if(event.key==='Enter')quickShop()"><button class="btn btn-primary" onclick="quickShop()">+</button></div>
+</div>
+<div class="card">
+${pending.length?pending.map((s,i)=>`<div class="item-row"><div class="item-check ${s.done?'done':''}" onclick="toggleShop(${items.indexOf(s)})">${s.done?'✓':''}</div><div style="flex:1">${s.name}</div><button class="item-delete" onclick="deleteShop(${items.indexOf(s)})">🗑️</button></div>`).join(''):'<div class="empty" style="padding:20px">הרשימה ריקה</div>'}
+${done.length?`<div class="divider"></div>${done.map((s,i)=>`<div class="item-row" style="opacity:0.5"><div class="item-check done">✓</div><div style="flex:1;text-decoration:line-through">${s.name}</div><button class="item-delete" onclick="deleteShop(${items.indexOf(s)})">🗑️</button></div>`).join('')}<button class="btn btn-small btn-outline" onclick="clearDoneShop()">🗑️ נקה</button>`:''}
+</div>
+`;
+}
 
-function renderShopItem(s,idx){const c=SHOP_CATS.find(x=>x.id===s.cat)||SHOP_CATS[1];return `<div class="item-row ${s.done?'done':''}"><div class="item-check ${s.done?'done':''}" onclick="D.shopping[${idx}].done=!D.shopping[${idx}].done;save();render()">${s.done?'✓':''}</div><div style="flex:1"><div class="item-text ${s.done?'done':''}">${s.name}</div><div class="item-meta">${c.icon} ${c.name}${s.qty?' • '+s.qty:''}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="event.stopPropagation();shareToWhatsApp('shopping-item',D.shopping[${idx}])">📲</button><button class="item-delete" onclick="D.shopping.splice(${idx},1);save();render()">🗑️</button></div>`;}
-
-function quickShop(){const i=document.getElementById('quick-shop'),n=i.value.trim();if(!n)return;if(!D.shopping)D.shopping=[];D.shopping.push({id:Date.now(),name:n,cat:'food',done:false});i.value='';save();render();}
-function openAddShop(){modal('🛒 הוסף פריט',`<div class="form-group"><label>שם</label><input class="form-input" id="s-name"></div><div class="form-group"><label>קטגוריה</label><select class="form-select" id="s-cat">${SHOP_CATS.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div><div class="form-group"><label>כמות</label><input class="form-input" id="s-qty" placeholder="2 ק״ג..."></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveShop()">הוסף</button></div>`);}
-function saveShop(){const n=document.getElementById('s-name').value.trim();if(!n)return alert('נא שם');if(!D.shopping)D.shopping=[];D.shopping.push({id:Date.now(),name:n,cat:document.getElementById('s-cat').value,qty:document.getElementById('s-qty').value.trim(),done:false});save();closeModal();render();}
-
-function renderCal(){
-  const y=calDate.getFullYear(),m=calDate.getMonth(),mName=calDate.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
-  const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay(),days=last.getDate();
-  const todayStr=fmtDate(new Date());
-  const cells=[];
-  const prev=new Date(y,m,0);for(let i=start-1;i>=0;i--)cells.push({d:prev.getDate()-i,other:true});
-  for(let i=1;i<=days;i++){const dt=new Date(y,m,i),ds=fmtDate(dt),ev=(D.events||[]).filter(e=>e.date===ds);cells.push({d:i,date:ds,today:ds===todayStr,hasEv:ev.length>0,shabbat:dt.getDay()===6});}
-  const rem=42-cells.length;for(let i=1;i<=rem;i++)cells.push({d:i,other:true});
-  const selEv=selDate?(D.events||[]).filter(e=>e.date===selDate).sort((a,b)=>(a.time||'').localeCompare(b.time||'')):[];
-  return `<div class="header"><h1>📅 לוח שנה</h1></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()-1);selDate=null;render()">◀</button><div style="font-weight:700">${mName}</div><button class="btn btn-small btn-outline" onclick="calDate.setMonth(calDate.getMonth()+1);selDate=null;render()">▶</button></div>
-<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((d,i)=>`<div style="text-align:center;font-size:0.7rem;font-weight:600;color:${i===6?'var(--primary)':'var(--text-light)'};padding:8px 0">${d}</div>`).join('')}${cells.map(c=>`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:0.85rem;cursor:pointer;position:relative;${c.other?'color:#cbd5e1;':c.today?'background:var(--primary);color:white;font-weight:700;':c.shabbat?'background:#f8fafc;':''}${c.date===selDate?'box-shadow:0 0 0 2px var(--primary);':''}" onclick="${c.date?`selDate='${c.date}';render()`:''}"><span>${c.d}</span>${c.hasEv?`<span style="position:absolute;bottom:4px;width:5px;height:5px;background:${c.today?'white':'var(--warning)'};border-radius:50%"></span>`:''}</div>`).join('')}</div></div>
-${selDate?`<div class="card"><div class="card-header"><div class="card-title">📋 ${parseDate(selDate).toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long'})}</div><button class="btn btn-small btn-primary" onclick="openAddEvent('${selDate}')">+</button></div>${!selEv.length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':selEv.map((e,i)=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];const mem=FAMILY.find(x=>x.id===e.member);const idx=D.events.indexOf(e);return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:50px;font-size:0.75rem;color:var(--text-light)">${e.time||'כל היום'}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${mem?mem.icon+' '+mem.short:'כולם'}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="shareToWhatsApp('event',D.events[${idx}])">📲</button><button class="item-delete" onclick="D.events.splice(${idx},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
-<button class="btn btn-primary btn-fab" onclick="openAddEvent()">+</button>`;}
-
-function openAddEvent(date){const def=date||selDate||fmtDate(new Date());modal('📅 אירוע חדש',`<div class="form-group"><label>כותרת</label><input class="form-input" id="e-title"></div><div class="form-group"><label>סוג</label><select class="form-select" id="e-type">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="e-date" value="${def}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="e-time"></div></div><div class="form-group"><label>למי?</label><select class="form-select" id="e-member"><option value="">כולם</option>${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-group"><label>תזכורת וואטסאפ</label><select class="form-select" id="e-reminder"><option value="">ללא תזכורת</option><option value="0">בזמן האירוע</option><option value="15">15 דקות לפני</option><option value="30">30 דקות לפני</option><option value="60">שעה לפני</option><option value="120">שעתיים לפני</option><option value="1440">יום לפני</option></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveEvent()">שמור</button></div>`);}
-function saveEvent(){const t=document.getElementById('e-title').value.trim();if(!t)return alert('נא כותרת');if(!D.events)D.events=[];const event={id:Date.now(),title:t,type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,time:document.getElementById('e-time').value,member:document.getElementById('e-member').value,reminder:document.getElementById('e-reminder').value,reminderSent:false};D.events.push(event);if(event.reminder&&event.date&&event.time){scheduleEventReminder(event);}save();closeModal();render();}
-
-function renderTasks(){
-  const tasks=D.tasks||[];
-  const pending=tasks.filter(t=>!t.done),done=tasks.filter(t=>t.done);
-  return `<div class="header"><h1>✅ משימות</h1></div>
-<div class="card"><div class="card-header"><div class="card-title">📋 משימות</div><button class="btn btn-small btn-primary" onclick="openAddTask()">+</button></div>${!pending.length?'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין</div>':pending.map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>
-${done.length?`<div class="card"><div class="card-title" style="margin-bottom:12px">✓ הושלמו</div>${done.map((t,i)=>renderTask(t,tasks.indexOf(t))).join('')}</div>`:''}
-<button class="btn btn-primary btn-fab" onclick="openAddTask()">+</button>`;}
-
-function renderTask(t,idx){const m=FAMILY.find(x=>x.id===t.kid);const hasTime=t.date&&t.time;const timeStr=hasTime?t.date.split('-').reverse().slice(0,2).join('/')+' '+t.time:'';return `<div class="item-row" style="border-right:3px solid ${m?.color||'#ccc'}"><div class="item-check round ${t.done?'done':''}" onclick="toggleTask(${idx})">${t.done?'✓':''}</div><div style="flex:1"><div class="item-text ${t.done?'done':''}">${t.text}</div><div class="item-meta">${m?m.icon+' '+m.short:''} ${t.points?'• ⭐'+t.points:''} ${timeStr?'• 🕐'+timeStr:''} ${t.reminder?'• 🔔':''}${t.reminderSent?' ✓':''}</div></div><button class="btn btn-small" style="background:#25D366;color:white;padding:4px 8px" onclick="event.stopPropagation();shareToWhatsApp('task',D.tasks[${idx}])">📲</button><button class="item-delete" onclick="D.tasks.splice(${idx},1);save();render()">🗑️</button></div>`;}
-function toggleTask(idx){const t=D.tasks[idx];t.done=!t.done;if(t.done&&t.points&&t.kid){D.points[t.kid]=(D.points[t.kid]||0)+t.points;}save();render();}
-function openAddTask(){modal('✅ משימה',`<div class="form-group"><label>משימה</label><input class="form-input" id="t-text"></div><div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="t-date" value="${fmtDate(new Date())}"></div><div class="form-group"><label>שעה</label><input type="time" class="form-input" id="t-time"></div></div><div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="5"></div><div class="form-group"><label>תזכורת וואטסאפ</label><select class="form-select" id="t-reminder"><option value="">ללא תזכורת</option><option value="0">בזמן המשימה</option><option value="15">15 דקות לפני</option><option value="30">30 דקות לפני</option><option value="60">שעה לפני</option><option value="120">שעתיים לפני</option><option value="1440">יום לפני</option></select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>`);}
-function saveTask(){const t=document.getElementById('t-text').value.trim();if(!t)return alert('נא משימה');if(!D.tasks)D.tasks=[];const task={id:Date.now(),text:t,kid:document.getElementById('t-kid').value,date:document.getElementById('t-date').value,time:document.getElementById('t-time').value,points:parseInt(document.getElementById('t-pts').value)||0,reminder:document.getElementById('t-reminder').value,reminderSent:false,done:false};D.tasks.push(task);if(task.reminder&&task.date&&task.time){scheduleReminder(task);}save();closeModal();render();}
-
-function renderMore(){
-  if(moreTab==='rewards')return renderRewards();
-  if(moreTab==='cars')return renderCars();
-  if(moreTab==='meals')return renderMeals();
-  if(moreTab==='workouts')return renderWorkouts();
-  if(moreTab==='grades')return renderGrades();
-  if(moreTab==='money')return renderMoney();
-  if(moreTab==='phones')return renderPhones();
-  return `<div class="header"><h1>⚡ עוד</h1></div>
-<div class="more-grid">
-<div class="more-item" onclick="showEmergency()"><div class="icon">🚨</div><div class="label">חירום</div></div>
-<div class="more-item" onclick="setMoreTab('money')"><div class="icon">💰</div><div class="label">חסכונות</div></div>
-<div class="more-item" onclick="setMoreTab('rewards')"><div class="icon">🎁</div><div class="label">תגמולים</div></div>
-<div class="more-item" onclick="setMoreTab('cars')"><div class="icon">🚗</div><div class="label">רכבים</div></div>
-<div class="more-item" onclick="setMoreTab('grades')"><div class="icon">📊</div><div class="label">ציונים</div></div>
-<div class="more-item" onclick="setMoreTab('meals')"><div class="icon">🍽️</div><div class="label">ארוחות</div></div>
-<div class="more-item" onclick="setMoreTab('workouts')"><div class="icon">🏃</div><div class="label">אימונים</div></div>
-<div class="more-item" onclick="setMoreTab('phones')"><div class="icon">📱</div><div class="label">טלפונים</div></div>
-</div>`;}
+function quickShop(){const i=document.getElementById('quick-shop'),n=i.value.trim();if(!n)return;D.shopping.push({id:Date.now(),name:n,done:false});i.value='';save();render();}
+function toggleShop(idx){D.shopping[idx].done=!D.shopping[idx].done;save();render();}
+function deleteShop(idx){D.shopping.splice(idx,1);save();render();}
+function clearDoneShop(){D.shopping=D.shopping.filter(s=>!s.done);save();render();}
 
 function renderPhones(){
-  return `<div class="header"><h1>📱 מספרי טלפון</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+  return `
+<div class="header"><h1>📱 טלפונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
 <div class="card">
-<div style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem">הזן מספרי טלפון לשליחת הודעות וואטסאפ</div>
-${FAMILY.map(m=>{
-  const phone=D.phones?.[m.id]||'';
-  return '<div class="item-row" style="border-right:3px solid '+m.color+'"><div class="member-'+m.id+'" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">'+m.icon+'</div><div style="flex:1"><div style="font-weight:600">'+m.name+'</div><div class="item-meta">'+(phone||'לא הוזן')+'</div></div><button class="btn btn-small btn-primary" onclick="editPhone(\''+m.id+'\')">✏️</button></div>';
-}).join('')}
-</div>`;
-}
-
-function editPhone(mid){
-  const m=FAMILY.find(x=>x.id===mid);
-  const phone=D.phones?.[mid]||'';
-  modal('📱 טלפון - '+m.name,'<div class="form-group"><label>מספר טלפון</label><input class="form-input" id="phone-input" type="tel" value="'+phone+'" placeholder="0501234567" dir="ltr"></div><div style="font-size:0.8rem;color:var(--text-light);margin-bottom:16px">הזן מספר ישראלי (למשל 0501234567)</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="savePhone(\''+mid+'\')">שמור</button></div>');
-}
-
-function savePhone(mid){
-  const phone=document.getElementById('phone-input').value.trim().replace(/[^0-9]/g,'');
-  if(!D.phones)D.phones={};
-  D.phones[mid]=phone;
-  save();
-  closeModal();
-  render();
-}
-
-function formatPhoneForWhatsApp(phone){
-  if(!phone)return '';
-  let p=phone.replace(/[^0-9]/g,'');
-  if(p.startsWith('0'))p='972'+p.substring(1);
-  return p;
-}
-
-function sendWhatsApp(phone,message){
-  if(!phone){alert('לא הוזן מספר טלפון');return;}
-  const p=formatPhoneForWhatsApp(phone);
-  const url='https://wa.me/'+p+'?text='+encodeURIComponent(message);
-  window.open(url,'_blank');
-}
-
-function sendWhatsAppToMember(mid,message){
-  const phone=D.phones?.[mid]||'';
-  if(!phone){alert('לא הוזן מספר טלפון ל'+FAMILY.find(x=>x.id===mid)?.name);return;}
-  sendWhatsApp(phone,message);
-}
-
-function shareToWhatsApp(type,data){
-  let message='';
-  if(type==='task'){
-    const m=FAMILY.find(x=>x.id===data.kid);
-    message='✅ משימה: '+data.text+'\n👤 '+(m?m.name:'');
-  }else if(type==='event'){
-    const t=EVENT_TYPES.find(x=>x.id===data.type)||EVENT_TYPES[0];
-    const m=FAMILY.find(x=>x.id===data.member);
-    message=t.icon+' אירוע: '+data.title+'\n📅 '+data.date+(data.time?' בשעה '+data.time:'')+'\n👤 '+(m?m.name:'כולם');
-  }else if(type==='shopping'){
-    message='🛒 רשימת קניות:\n'+data.map(function(s){return '• '+s.name+(s.qty?' ('+s.qty+')':'');}).join('\n');
-  }else if(type==='shopping-item'){
-    message='🛒 לקנות: '+data.name+(data.qty?' ('+data.qty+')':'');
-  }
-  
-  showWhatsAppPicker(message);
-}
-
-function showWhatsAppPicker(message){
-  const membersWithPhone=FAMILY.filter(function(m){return D.phones?.[m.id];});
-  let html='<div style="margin-bottom:16px;font-weight:600">שלח ל:</div>';
-  
-  if(membersWithPhone.length===0){
-    html+='<div class="empty" style="padding:20px"><span class="emoji">📱</span>לא הוזנו מספרי טלפון<br><button class="btn btn-primary" style="margin-top:12px" onclick="closeModal();setMoreTab(\'phones\');nav(\'more\')">הוסף טלפונים</button></div>';
-  }else{
-    membersWithPhone.forEach(function(m){
-      html+='<div class="item-row" style="cursor:pointer;border-right:3px solid '+m.color+'" onclick="sendWhatsAppToMember(\''+m.id+'\',\''+message.replace(/'/g,"\\'")+'\');closeModal();"><div class="member-'+m.id+'" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">'+m.icon+'</div><div style="flex:1"><div style="font-weight:600">'+m.name+'</div><div class="item-meta">'+D.phones[m.id]+'</div></div><span style="font-size:1.5rem">📲</span></div>';
-    });
-    html+='<div class="divider"></div><div class="item-row" style="cursor:pointer" onclick="shareWhatsAppGeneric(\''+message.replace(/'/g,"\\'")+'\');closeModal();"><span style="font-size:1.5rem">📤</span><div style="flex:1;font-weight:600">שתף לכל אפליקציה</div></div>';
-  }
-  
-  html+='<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button></div>';
-  modal('📲 שלח בוואטסאפ',html);
-}
-
-function shareWhatsAppGeneric(message){
-  if(navigator.share){
-    navigator.share({text:message}).catch(function(){});
-  }else{
-    window.open('https://wa.me/?text='+encodeURIComponent(message),'_blank');
-  }
-}
-
-// Reminder System
-let reminderTimers={};
-
-function scheduleReminder(task){
-  if(!task.date||!task.time||!task.reminder)return;
-  const taskTime=new Date(task.date+'T'+task.time);
-  const reminderMinutes=parseInt(task.reminder)||0;
-  const reminderTime=new Date(taskTime.getTime()-reminderMinutes*60000);
-  const now=new Date();
-  const delay=reminderTime.getTime()-now.getTime();
-  
-  if(delay>0){
-    reminderTimers[task.id]=setTimeout(function(){
-      showReminderNotification(task);
-    },delay);
-  }
-}
-
-function showReminderNotification(task){
-  const m=FAMILY.find(x=>x.id===task.kid);
-  const message='🔔 תזכורת!\n✅ '+task.text+'\n👤 '+(m?m.name:'')+'\n🕐 '+task.time;
-  
-  // Show in-app notification
-  showNotificationPopup(task,message);
-  
-  // Try to show browser notification
-  if('Notification' in window){
-    if(Notification.permission==='granted'){
-      const n=new Notification('🔔 תזכורת - משפחת טקלה',{
-        body:task.text+' - '+(m?m.name:''),
-        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏠</text></svg>',
-        requireInteraction:true
-      });
-      n.onclick=function(){
-        window.focus();
-        showWhatsAppPicker(message);
-      };
-    }else if(Notification.permission!=='denied'){
-      Notification.requestPermission();
-    }
-  }
-  
-  // Mark as sent
-  const idx=D.tasks.findIndex(t=>t.id===task.id);
-  if(idx>=0){
-    D.tasks[idx].reminderSent=true;
-    save();
-    render();
-  }
-}
-
-function showNotificationPopup(task,message){
-  const m=FAMILY.find(x=>x.id===task.kid);
-  const popup=document.createElement('div');
-  popup.id='reminder-popup';
-  popup.innerHTML=`
-<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px">
-<div style="background:white;border-radius:20px;padding:24px;max-width:350px;width:100%;text-align:center">
-<div style="font-size:3rem;margin-bottom:12px">🔔</div>
-<div style="font-size:1.2rem;font-weight:700;margin-bottom:8px">תזכורת!</div>
-<div style="font-size:1rem;font-weight:600;margin-bottom:4px">${task.text}</div>
-<div style="color:var(--text-light);margin-bottom:4px">${m?m.icon+' '+m.name:''}</div>
-<div style="color:var(--text-light);margin-bottom:20px">🕐 ${task.time}</div>
-<div style="display:flex;gap:10px">
-<button onclick="closeReminderPopup()" style="flex:1;padding:12px;border:2px solid #e2e8f0;background:white;border-radius:12px;font-size:0.9rem;cursor:pointer">סגור</button>
-<button onclick="closeReminderPopup();showWhatsAppPicker('${message.replace(/'/g,"\\'").replace(/\n/g,'\\n')}')" style="flex:1;padding:12px;background:#25D366;color:white;border:none;border-radius:12px;font-size:0.9rem;cursor:pointer">📲 שלח בוואטסאפ</button>
+${FAMILY.map(m=>`<div class="item-row" style="border-right:3px solid ${m.color}"><div class="member-${m.id}" style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center">${m.icon}</div><div style="flex:1"><div style="font-weight:600">${m.name}</div><div class="item-meta">${D.phones?.[m.id]||'לא הוזן'}</div></div><button class="btn btn-small btn-primary" onclick="editPhone('${m.id}')">✏️</button></div>`).join('')}
 </div>
-</div>
-</div>`;
-  document.body.appendChild(popup);
-  
-  // Play sound
-  try{
-    const audio=new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp6ciHlxeIOOmZqUiHpxdoGLlZmXkIR6dHqEjpWYlo+DenV5g42Ul5WOgXl1eIKMk5aUjYB4dHeBi5KVk4x/d3R3gIqRlJKLfnZzdoCJkJOSint1c3Z/iI+SkYl6dHN1foePkZCIeXNydX2GjpCPh3hycnR8hY2Pjod3cXJze4SNjo2GdnFxc3qDjI6MhXVwcXJ5goqMi4R0cHByeYGJi4qDc29vcXiAiIqJgnJvb3B3f4eJiIFxbm9vdn6Gh4eBcG5ubnV9hYaGgG9tbW10fISFhX9ubGxtc3uDhIR+bWxsbHJ6goODfWxra2txeYGCgnxramprb3d/gYB7aWlqaW52fX9+emhoaWhtdXx+fXlnZ2hna3N6fHx4ZmZnZmpxeHp6d2VlZmVocHZ4eHZkZGVkZ25zdnZ0Y2NkZGZsdHV1c2FiY2NlbHR1dHJhYWJiY2pxc3JxYGFhYWJpc3JycGBgYGBhZ3BxcG9fX19fYGZvcHBuXl5eXl9lbm9vbV1dXV5eZGxubmxcXF1dXWNrbW1rW1xcXFxibGxsaltbW1tbYWpra2paWlpaWmBpamppWVlZWVlfaGlpaFhYWFhYXmdoaGdXV1dXV11mZ2dmVlZWVlZbZGZmZVVVVVVVWmNkZGRUVFRUVFlhYmNjU1NTU1NYYGFhYlJSUlJSV19gYGFRUVFRUVZeX19fUFBQUFBVXV5eXk9PT09PVFV');
-    audio.play().catch(function(){});
-  }catch(e){}
+`;
 }
 
-function closeReminderPopup(){
-  const popup=document.getElementById('reminder-popup');
-  if(popup)popup.remove();
-}
-
-// Check reminders on load and every minute
-function checkAllReminders(){
-  (D.tasks||[]).forEach(function(task){
-    if(task.reminder&&task.date&&task.time&&!task.reminderSent&&!task.done){
-      scheduleReminder(task);
-    }
-  });
-  (D.events||[]).forEach(function(event){
-    if(event.reminder&&event.date&&event.time&&!event.reminderSent){
-      scheduleEventReminder(event);
-    }
-  });
-}
-
-function scheduleEventReminder(event){
-  if(!event.date||!event.time||!event.reminder)return;
-  const eventTime=new Date(event.date+'T'+event.time);
-  const reminderMinutes=parseInt(event.reminder)||0;
-  const reminderTime=new Date(eventTime.getTime()-reminderMinutes*60000);
-  const now=new Date();
-  const delay=reminderTime.getTime()-now.getTime();
-  
-  if(delay>0&&delay<86400000){ // Only schedule if within 24 hours
-    setTimeout(function(){
-      showEventReminderNotification(event);
-    },delay);
-  }
-}
-
-function showEventReminderNotification(event){
-  const t=EVENT_TYPES.find(x=>x.id===event.type)||EVENT_TYPES[0];
-  const m=FAMILY.find(x=>x.id===event.member);
-  const message='🔔 תזכורת!\n'+t.icon+' '+event.title+'\n📅 '+event.date+'\n🕐 '+event.time+'\n👤 '+(m?m.name:'כולם');
-  
-  showNotificationPopup({text:event.title,time:event.time,kid:event.member},message);
-  
-  if('Notification' in window&&Notification.permission==='granted'){
-    new Notification('🔔 תזכורת - '+event.title,{
-      body:(m?m.name:'כולם')+' - '+event.time,
-      requireInteraction:true
-    });
-  }
-  
-  const idx=D.events.findIndex(e=>e.id===event.id);
-  if(idx>=0){
-    D.events[idx].reminderSent=true;
-    save();
-  }
-}
-
-// Request notification permission
-if('Notification' in window&&Notification.permission==='default'){
-  setTimeout(function(){
-    Notification.requestPermission();
-  },3000);
-}
-
-// Start reminder checker
-setTimeout(checkAllReminders,2000);
-setInterval(checkAllReminders,60000);
-
-function showEmergency(){modal('🚨 חירום',`${(D.emergency?.contacts||[]).map(c=>`<a href="tel:${c.phone}" style="display:flex;align-items:center;gap:12px;padding:16px;background:#fee2e2;border-radius:12px;margin-bottom:8px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">${c.icon}</span><div><div style="font-weight:700">${c.name}</div><div style="font-size:1.2rem;color:var(--danger)">${c.phone}</div></div></a>`).join('')}`,'admin');}
-
-function renderMoney(){
-  return `<div class="header"><h1>💰 חסכונות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-${KIDS.map(k=>`<div class="kid-card" style="border-color:${k.color}">
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-<div class="member-${k.id}" style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem">${k.icon}</div>
-<div style="flex:1"><div style="font-size:1.3rem;font-weight:700">${k.name}</div><div style="color:var(--text-light)">⭐ ${D.points?.[k.id]||0} נקודות</div></div>
-<div style="text-align:left"><div style="font-size:1.8rem;font-weight:700;color:var(--success)">₪${D.money?.[k.id]||0}</div></div>
-</div>
-<div style="display:flex;gap:8px">
-<button class="btn btn-small btn-success" style="flex:1" onclick="changeMoney('${k.id}',1)">+ הוסף</button>
-<button class="btn btn-small btn-danger" style="flex:1" onclick="changeMoney('${k.id}',-1)">- הורד</button>
-</div>
-</div>`).join('')}`;}
-
-function changeMoney(kid,dir){
-  const amt=prompt(dir>0?'סכום להוספה:':'סכום להורדה:');
-  if(amt&&!isNaN(amt)){
-    if(!D.money)D.money={};
-    D.money[kid]=(D.money[kid]||0)+(parseInt(amt)*dir);
-    save();render();
-  }
-}
-
-function renderRewards(){
-  const rewards=(D.rewards||[]).filter(r=>r.type==='bonus');
-  const punishments=(D.rewards||[]).filter(r=>r.type==='punish');
-  return `<div class="header"><h1>🎁 תגמולים וקנסות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-<div class="card">
-<div class="card-header"><div class="card-title">🎁 בונוסים</div><button class="btn btn-small btn-success" onclick="openAddReward('bonus')">+ הוסף</button></div>
-${!rewards.length?'<div class="empty" style="padding:20px">אין בונוסים</div>':rewards.map((r,i)=>{
-  const k=FAMILY.find(x=>x.id===r.kid);
-  const t=REWARD_TYPES.find(x=>x.id===r.rewardType)||REWARD_TYPES[0];
-  return `<div class="reward-card bonus"><span style="font-size:1.5rem">${t.icon}</span><div style="flex:1"><div style="font-weight:600">${r.desc||t.name}</div><div class="item-meta">${k?k.icon+' '+k.short:''} ${r.value?'• '+r.value:''}</div></div><button class="item-delete" onclick="D.rewards.splice(${D.rewards.indexOf(r)},1);save();render()">🗑️</button></div>`;
-}).join('')}
-</div>
-
-<div class="card">
-<div class="card-header"><div class="card-title">⚠️ קנסות</div><button class="btn btn-small btn-danger" onclick="openAddReward('punish')">+ הוסף</button></div>
-${!punishments.length?'<div class="empty" style="padding:20px">אין קנסות</div>':punishments.map((r,i)=>{
-  const k=FAMILY.find(x=>x.id===r.kid);
-  const t=PUNISH_TYPES.find(x=>x.id===r.punishType)||PUNISH_TYPES[0];
-  return `<div class="reward-card punish"><span style="font-size:1.5rem">${t.icon}</span><div style="flex:1"><div style="font-weight:600">${r.desc||t.name}</div><div class="item-meta">${k?k.icon+' '+k.short:''} ${r.value?'• '+r.value:''} ${r.active?'<span class="badge badge-danger">פעיל</span>':''}</div></div>
-<button class="btn btn-small ${r.active?'btn-outline':'btn-warning'}" onclick="D.rewards[${D.rewards.indexOf(r)}].active=!D.rewards[${D.rewards.indexOf(r)}].active;save();render()">${r.active?'סיים':'הפעל'}</button>
-<button class="item-delete" onclick="D.rewards.splice(${D.rewards.indexOf(r)},1);save();render()">🗑️</button></div>`;
-}).join('')}
-</div>`;}
-
-function openAddReward(type){
-  const isBonus=type==='bonus';
-  modal(isBonus?'🎁 בונוס חדש':'⚠️ קנס חדש',`
-<div class="form-group"><label>ילד</label><select class="form-select" id="r-kid">${KIDS.map(k=>`<option value="${k.id}">${k.icon} ${k.name}</option>`).join('')}</select></div>
-<div class="form-group"><label>סוג</label><select class="form-select" id="r-type">${(isBonus?REWARD_TYPES:PUNISH_TYPES).map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div>
-<div class="form-group"><label>תיאור</label><input class="form-input" id="r-desc" placeholder="${isBonus?'פיצה עם חברים':'ללא טלפון'}"></div>
-<div class="form-group"><label>ערך/משך</label><input class="form-input" id="r-value" placeholder="${isBonus?'₪50':'שעתיים'}"></div>
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn ${isBonus?'btn-success':'btn-danger'}" onclick="saveReward('${type}')">הוסף</button></div>`,isBonus?'success':'admin');
-}
-
-function saveReward(type){
-  if(!D.rewards)D.rewards=[];
-  const r={
-    id:Date.now(),
-    type,
-    kid:document.getElementById('r-kid').value,
-    desc:document.getElementById('r-desc').value.trim(),
-    value:document.getElementById('r-value').value.trim(),
-    active:type==='punish'
-  };
-  r[type==='bonus'?'rewardType':'punishType']=document.getElementById('r-type').value;
-  D.rewards.push(r);
-  save();closeModal();render();
-}
-
-function renderCars(){
-  return `<div class="header"><h1>🚗 רכבים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-${(D.cars||[]).map((c,i)=>`<div class="car-card">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-<div style="font-size:1.2rem;font-weight:700">🚗 ${c.name}</div>
-<button class="btn btn-small btn-primary" onclick="editCar(${i})">✏️ ערוך</button>
-</div>
-<div class="car-stat"><span>מספר רכב</span><strong>${c.plate||'לא הוזן'}</strong></div>
-<div class="car-stat"><span>ק״מ</span><strong>${c.km?c.km.toLocaleString():'0'}</strong></div>
-<div class="car-stat"><span>טיפול אחרון</span><strong>${c.lastService||'-'}</strong></div>
-<div class="car-stat"><span>טיפול הבא</span><strong>${c.nextService||'-'}</strong></div>
-<div class="car-stat"><span>טסט</span><strong>${c.test||'-'}</strong></div>
-<div class="car-stat"><span>ביטוח עד</span><strong>${c.insurance||'-'}</strong></div>
-<div class="car-stat"><span>חברה מבטחת</span><strong>${c.insuranceCompany||'-'}</strong></div>
-</div>`).join('')}`;}
-
-function editCar(idx){
-  const c=D.cars[idx];
-  modal('🚗 עריכת '+c.name,`
-<div class="form-group"><label>שם הרכב</label><input class="form-input" id="c-name" value="${c.name||''}"></div>
-<div class="form-group"><label>מספר רכב</label><input class="form-input" id="c-plate" value="${c.plate||''}" placeholder="12-345-67"></div>
-<div class="form-group"><label>ק״מ נוכחי</label><input type="number" class="form-input" id="c-km" value="${c.km||0}"></div>
-<div class="form-row">
-<div class="form-group"><label>טיפול אחרון</label><input type="date" class="form-input" id="c-last" value="${c.lastService||''}"></div>
-<div class="form-group"><label>טיפול הבא</label><input type="date" class="form-input" id="c-next" value="${c.nextService||''}"></div>
-</div>
-<div class="form-group"><label>טסט</label><input type="date" class="form-input" id="c-test" value="${c.test||''}"></div>
-<div class="form-row">
-<div class="form-group"><label>ביטוח עד</label><input type="date" class="form-input" id="c-ins" value="${c.insurance||''}"></div>
-<div class="form-group"><label>חברה מבטחת</label><input class="form-input" id="c-comp" value="${c.insuranceCompany||''}"></div>
-</div>
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveCar(${idx})">שמור</button></div>`);
-}
-
-function saveCar(idx){
-  const c=D.cars[idx];
-  c.name=document.getElementById('c-name').value;
-  c.plate=document.getElementById('c-plate').value;
-  c.km=parseInt(document.getElementById('c-km').value)||0;
-  c.lastService=document.getElementById('c-last').value;
-  c.nextService=document.getElementById('c-next').value;
-  c.test=document.getElementById('c-test').value;
-  c.insurance=document.getElementById('c-ins').value;
-  c.insuranceCompany=document.getElementById('c-comp').value;
-  
-  // Add to calendar
-  if(c.nextService){
-    if(!D.events)D.events=[];
-    const exists=D.events.find(e=>e.autoId==='car-service-'+c.id);
-    if(exists)D.events.splice(D.events.indexOf(exists),1);
-    D.events.push({id:Date.now(),title:'טיפול '+c.name,type:'car',date:c.nextService,time:'09:00',member:'',autoId:'car-service-'+c.id});
-  }
-  if(c.test){
-    const exists=D.events.find(e=>e.autoId==='car-test-'+c.id);
-    if(exists)D.events.splice(D.events.indexOf(exists),1);
-    D.events.push({id:Date.now(),title:'טסט '+c.name,type:'car',date:c.test,time:'09:00',member:'',autoId:'car-test-'+c.id});
-  }
-  
-  save();closeModal();render();
-}
-
+// MEALS - weekly view without clicking each day
 function renderMeals(){
-  return `<div class="header"><h1>🍽️ תפריט שבועי</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-<div class="card">${DAYS.map((day,di)=>`<div style="padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px">
-<div style="font-weight:600;font-size:0.9rem;margin-bottom:8px">${day}</div>
-<div style="display:flex;gap:6px;overflow-x:auto">${MEALS.map(meal=>{
-  const key=di+'-'+meal;
-  const items=D.meals?.[key]||[];
-  const count=items.length;
-  return `<div style="background:${count?'var(--primary)':'white'};color:${count?'white':'var(--text)'};border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.75rem;cursor:pointer;min-width:80px;text-align:center;flex:1" onclick="editMeal(${di},'${meal}')">
-<div style="font-weight:600">${meal}</div>
-${count?`<div style="font-size:0.65rem;opacity:0.9;margin-top:2px">${count} פריטים</div>`:'<div style="font-size:0.65rem;opacity:0.7;margin-top:2px">+ הוסף</div>'}
+  const today=getDayIdx(new Date());
+  return `
+<div class="header"><h1>🍽️ ארוחות שבועיות</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
+<div class="meals-week">
+${DAYS.map((day,di)=>{
+  const isToday=di===today;
+  return `<div class="meal-day-card">
+<div class="meal-day-title ${isToday?'today':''}"><span>${isToday?'📍':''} ${day}</span>${isToday?'<span class="badge badge-info">היום</span>':''}</div>
+<div class="meals-row">
+${MEALS.map(meal=>{
+  const k=di+'-'+meal;
+  const items=D.meals?.[k]||[];
+  return `<div class="meal-slot" onclick="editMeal(${di},'${meal}')">
+<div class="meal-slot-title">${meal==='בוקר'?'🌅':meal==='צהריים'?'☀️':'🌙'} ${meal}</div>
+<div class="meal-slot-items">${items.length?items.map(i=>i.name).join(', '):'<span style="color:var(--text-light)">ריק</span>'}</div>
 </div>`;
-}).join('')}</div>
-</div>`).join('')}</div>`;}
-
-function editMeal(day,meal){
-  const key=day+'-'+meal;
-  if(!D.meals)D.meals={};
-  if(!D.meals[key])D.meals[key]=[];
-  const items=D.meals[key];
-  
-  let itemsHtml='';
-  if(items.length){
-    for(let i=0;i<items.length;i++){
-      const item=items[i];
-      const m=FAMILY.find(x=>x.id===item.who);
-      const mName=m?m.icon+' '+m.short:'👨‍👩‍👧‍👦 כולם';
-      itemsHtml+='<div class="item-row"><div style="flex:1"><div style="font-weight:600">'+item.name+'</div><div class="item-meta">'+mName+'</div></div><button class="btn btn-small btn-danger" onclick="removeMealItem('+day+',\''+meal+'\','+i+')">🗑️</button></div>';
-    }
-  }else{
-    itemsHtml='<div class="empty" style="padding:20px"><span class="emoji">🍽️</span>אין פריטים</div>';
-  }
-  
-  const formHtml='<div style="margin-bottom:16px">'+itemsHtml+'</div><div class="divider"></div><div style="font-weight:600;margin-bottom:12px">➕ הוסף פריט:</div><div class="form-group"><label>מה לאכול?</label><input class="form-input" id="meal-name" placeholder="חביתה, טוסט, סלט..."></div><div class="form-group"><label>למי?</label><select class="form-select" id="meal-who"><option value="all">👨‍👩‍👧‍👦 כל המשפחה</option>'+FAMILY.map(function(m){return '<option value="'+m.id+'">'+m.icon+' '+m.name+'</option>';}).join('')+'</select></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal();render();">סגור</button><button class="btn btn-primary" onclick="saveMealItem('+day+',\''+meal+'\');">הוסף פריט</button></div>';
-  
-  modal('🍽️ '+DAYS[day]+' - ארוחת '+meal, formHtml);
-}
-
-function saveMealItem(day,meal){
-  const key=day+'-'+meal;
-  const nameEl=document.getElementById('meal-name');
-  const whoEl=document.getElementById('meal-who');
-  if(!nameEl){alert('שגיאה - לא נמצא שדה');return;}
-  const name=nameEl.value.trim();
-  const who=whoEl?whoEl.value:'all';
-  if(!name){alert('נא להזין מה לאכול');return;}
-  
-  if(!D.meals)D.meals={};
-  if(!D.meals[key])D.meals[key]=[];
-  D.meals[key].push({name:name,who:who});
-  save();
-  closeModal();
-  setTimeout(function(){editMeal(day,meal);},200);
-}
-
-function removeMealItem(day,meal,idx){
-  const key=day+'-'+meal;
-  if(D.meals&&D.meals[key]){
-    D.meals[key].splice(idx,1);
-    save();
-    closeModal();
-    setTimeout(function(){editMeal(day,meal);},200);
-  }
-}
-
-function renderWorkouts(){
-  const workouts=D.workouts||[];
-  return `<div class="header"><h1>🏃 אימונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-<div class="card">
-<div class="card-header"><div class="card-title">🏃 אימונים שבועיים</div><button class="btn btn-small btn-primary" onclick="openAddWorkout()">+ הוסף</button></div>
-${!workouts.length?'<div class="empty" style="padding:20px">אין אימונים</div>':workouts.map((w,i)=>{
-  const m=FAMILY.find(x=>x.id===w.member);
-  return `<div class="item-row" style="border-right:3px solid #8b5cf6"><span style="font-size:1.3rem">🏃</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${m?m.icon+' '+m.short:''} • ${DAYS[w.day]} ${w.time}</div></div><button class="item-delete" onclick="D.workouts.splice(${i},1);save();render()">🗑️</button></div>`;
 }).join('')}
-</div>`;}
+</div>
+</div>`;
+}).join('')}
+</div>
+`;
+}
 
-function openAddWorkout(){
+// MODALS
+function openAddTask(){
+  modal('✅ משימה חדשה',`
+<div class="form-group"><label>משימה</label><input class="form-input" id="t-text" placeholder="תאר את המשימה..."></div>
+<div class="form-group"><label>למי?</label><select class="form-select" id="t-kid">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-row">
+<div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="t-date" value="${fmtDate(new Date())}"></div>
+<div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="t-pts" value="${D.settings?.taskPoints||1}" min="1"></div>
+</div>
+<div class="form-group"><label>סוג משימה</label><select class="form-select" id="t-type"><option value="once">מזדמנת (חד פעמית)</option><option value="recurring">קבועה (חוזרת)</option></select></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveTask()">הוסף</button></div>
+`);
+}
+
+function saveTask(){
+  const text=document.getElementById('t-text').value.trim();
+  if(!text)return alert('נא להזין משימה');
+  D.tasks.push({id:Date.now(),text,kid:document.getElementById('t-kid').value,date:document.getElementById('t-date').value,points:parseInt(document.getElementById('t-pts').value)||5,recurring:document.getElementById('t-type').value==='recurring',done:false});
+  save();closeModal();render();
+}
+
+function openAddEvent(date){
+  const def=date||selDate||fmtDate(new Date());
+  modal('📅 אירוע חדש',`
+<div class="form-group"><label>כותרת</label><input class="form-input" id="e-title"></div>
+<div class="form-group"><label>סוג</label><select class="form-select" id="e-type">${EVENT_TYPES.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('')}</select></div>
+<div class="form-row">
+<div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="e-date" value="${def}"></div>
+<div class="form-group"><label>שעה</label><input type="time" class="form-input" id="e-time"></div>
+</div>
+<div class="form-group"><label>למי?</label><select class="form-select" id="e-member"><option value="">כולם</option>${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveEvent()">שמור</button></div>
+`);
+}
+
+function saveEvent(){
+  const title=document.getElementById('e-title').value.trim();
+  if(!title)return alert('נא להזין כותרת');
+  D.events.push({id:Date.now(),title,type:document.getElementById('e-type').value,date:document.getElementById('e-date').value,time:document.getElementById('e-time').value,member:document.getElementById('e-member').value});
+  save();closeModal();render();
+}
+
+function openAddExam(kid){
+  modal('📝 מבחן חדש',`
+<div class="form-group"><label>מקצוע</label><input class="form-input" id="ex-subj" placeholder="מתמטיקה, אנגלית..."></div>
+<div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="ex-date" value="${fmtDate(new Date())}"></div>
+<div class="form-group"><label>הערות</label><input class="form-input" id="ex-notes" placeholder="פרקים, נושאים..."></div>
+<input type="hidden" id="ex-kid" value="${kid}">
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveExam()">הוסף</button></div>
+`,'danger');
+}
+
+function saveExam(){
+  const kid=document.getElementById('ex-kid').value;
+  const subject=document.getElementById('ex-subj').value.trim();
+  const date=document.getElementById('ex-date').value;
+  if(!subject)return alert('נא להזין מקצוע');
+  if(!D.exams[kid])D.exams[kid]=[];
+  D.exams[kid].push({id:Date.now(),subject,date,notes:document.getElementById('ex-notes').value});
+  // Also add to calendar
+  D.events.push({id:Date.now()+1,title:'מבחן: '+subject,type:'exam',date,member:kid});
+  save();closeModal();render();
+}
+
+function openEnterGrade(kid,examId){
+  modal('📊 הזן ציון',`
+<div class="form-group"><label>ציון (0-100)</label><input type="number" class="form-input" id="grade-val" min="0" max="100" placeholder="85"></div>
+<div style="background:var(--bg);padding:12px;border-radius:10px;margin-bottom:16px"><div style="font-weight:600;margin-bottom:4px">💡 ניקוד צפוי</div><div id="grade-preview" style="font-size:0.85rem;color:var(--text-light)">הזן ציון לראות</div></div>
+<input type="hidden" id="grade-kid" value="${kid}">
+<input type="hidden" id="grade-exam" value="${examId}">
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveGrade()">שמור</button></div>
+`);
+  document.getElementById('grade-val').oninput=function(){
+    const g=parseInt(this.value)||0;
+    document.getElementById('grade-preview').textContent='ציון '+g+' = +'+gradeToPoints(g)+' נקודות';
+  };
+}
+
+function saveGrade(){
+  const kid=document.getElementById('grade-kid').value;
+  const examId=parseInt(document.getElementById('grade-exam').value);
+  const grade=parseInt(document.getElementById('grade-val').value);
+  if(isNaN(grade)||grade<0||grade>100)return alert('נא להזין ציון תקין (0-100)');
+  const exam=D.exams[kid]?.find(e=>e.id===examId);
+  if(exam)exam.grade=grade;
+  save();closeModal();render();
+}
+
+function openAddWorkout(mid){
+  const workoutTypes=['ריצה','הליכה','חדר כושר','שחייה','אופניים','יוגה','כדורסל','כדורגל','טניס'];
   modal('🏃 אימון חדש',`
-<div class="form-group"><label>סוג אימון</label><select class="form-select" id="w-type">${WORKOUT_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
-<div class="form-group"><label>מי?</label><select class="form-select" id="w-member">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>סוג אימון</label><select class="form-select" id="w-type">${workoutTypes.map(t=>`<option>${t}</option>`).join('')}</select></div>
+<div class="form-group"><label>מי?</label><select class="form-select" id="w-member">${FAMILY.map(m=>`<option value="${m.id}" ${m.id===mid?'selected':''}>${m.icon} ${m.name}</option>`).join('')}</select></div>
 <div class="form-row">
 <div class="form-group"><label>יום</label><select class="form-select" id="w-day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
 <div class="form-group"><label>שעה</label><input type="time" class="form-input" id="w-time" value="07:00"></div>
 </div>
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveWorkout()">הוסף</button></div>`);
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveWorkout()">הוסף</button></div>
+`);
 }
 
 function saveWorkout(){
-  if(!D.workouts)D.workouts=[];
-  const w={
-    id:Date.now(),
-    activity:document.getElementById('w-type').value,
-    member:document.getElementById('w-member').value,
-    day:parseInt(document.getElementById('w-day').value),
-    time:document.getElementById('w-time').value
-  };
-  D.workouts.push(w);
+  const workout={id:Date.now(),activity:document.getElementById('w-type').value,member:document.getElementById('w-member').value,day:parseInt(document.getElementById('w-day').value),time:document.getElementById('w-time').value};
+  D.workouts.push(workout);
+  // Add to calendar for next occurrence
+  const today=new Date();
+  const dayDiff=(workout.day-today.getDay()+7)%7||7;
+  const nextDate=new Date(today);
+  nextDate.setDate(today.getDate()+dayDiff);
+  D.events.push({id:Date.now()+1,title:workout.activity,type:'workout',date:fmtDate(nextDate),time:workout.time,member:workout.member});
   save();closeModal();render();
 }
 
-function renderGrades(){
-  return `<div class="header"><h1>📊 ציונים</h1><div class="header-sub"><button class="btn btn-small btn-outline" onclick="setMoreTab('main')" style="color:white;border-color:rgba(255,255,255,0.5)">← חזרה</button></div></div>
-${KIDS.filter(k=>k.grade!=='גן').map(k=>{
-  const grades=D.grades?.[k.id]||[];
-  const avg=grades.length?Math.round(grades.filter(g=>g.grade).reduce((a,g)=>a+(g.grade||0),0)/grades.filter(g=>g.grade).length):0;
-  return `<div class="card">
-<div class="card-header">
-<div class="card-title"><span class="member-${k.id}" style="width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-left:8px">${k.icon}</span>${k.name}</div>
-<button class="btn btn-small btn-primary" onclick="openAddGrade('${k.id}')">+ הוסף</button>
-</div>
-${avg?`<div style="text-align:center;margin-bottom:12px"><span style="font-size:2rem;font-weight:700;color:${avg>=80?'var(--success)':avg>=60?'var(--warning)':'var(--danger)'}">${avg}</span><div style="font-size:0.75rem;color:var(--text-light)">ממוצע</div></div>`:''}
-${grades.length?grades.slice().reverse().slice(0,5).map(g=>`<div class="item-row" style="border-right:3px solid ${g.grade>=80?'var(--success)':g.grade>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${g.subject}</div><div class="item-meta">${g.date||''} ${g.type||''}</div></div><div style="font-size:1.3rem;font-weight:700;color:${g.grade>=80?'var(--success)':g.grade>=60?'var(--warning)':'var(--danger)'}">${g.grade||'-'}</div></div>`).join(''):'<div class="empty" style="padding:20px">אין ציונים</div>'}
-</div>`;
-}).join('')}`;}
-
-function openAddGrade(kid){
-  modal('📊 הוסף ציון',`
-<div class="form-group"><label>מקצוע</label><input class="form-input" id="g-subj"></div>
-<div class="form-group"><label>ציון</label><input type="number" class="form-input" id="g-val" min="0" max="100"></div>
-<div class="form-row">
-<div class="form-group"><label>סוג</label><select class="form-select" id="g-type"><option>מבחן</option><option>בוחן</option><option>עבודה</option></select></div>
-<div class="form-group"><label>תאריך</label><input type="date" class="form-input" id="g-date" value="${fmtDate(new Date())}"></div>
-</div>
-<input type="hidden" id="g-kid" value="${kid}">
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveGrade()">הוסף</button></div>`);
+function logWorkout(mid,activity){
+  if(!D.completedWorkouts)D.completedWorkouts=[];
+  D.completedWorkouts.push({id:Date.now(),member:mid,activity,date:new Date().toLocaleDateString('he-IL')});
+  save();render();
 }
 
-function saveGrade(){
-  const kid=document.getElementById('g-kid').value;
-  if(!D.grades)D.grades={};
-  if(!D.grades[kid])D.grades[kid]=[];
-  D.grades[kid].push({
-    id:Date.now(),
-    subject:document.getElementById('g-subj').value.trim(),
-    grade:parseInt(document.getElementById('g-val').value)||null,
-    type:document.getElementById('g-type').value,
-    date:document.getElementById('g-date').value
+function openAddRequest(fromId){
+  modal('📨 בקשה חדשה',`
+<div class="form-group"><label>מי מבקש?</label><select class="form-select" id="r-from">${FAMILY.map(m=>`<option value="${m.id}" ${m.id===fromId?'selected':''}>${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>ממי?</label><select class="form-select" id="r-to">${FAMILY.filter(m=>m.type==='parent').map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+<div class="form-group"><label>כותרת</label><input class="form-input" id="r-title" placeholder="למשל: כסף לסרט"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveRequest()">שלח</button></div>
+`,'warning');
+}
+
+function saveRequest(){
+  const title=document.getElementById('r-title').value.trim();
+  if(!title)return alert('נא להזין כותרת');
+  D.requests.push({id:Date.now(),from:document.getElementById('r-from').value,to:document.getElementById('r-to').value,title,status:'pending',date:fmtDate(new Date())});
+  save();closeModal();render();
+}
+
+function approveRequest(id){const r=D.requests.find(x=>x.id===id);if(r)r.status='approved';save();render();}
+function rejectRequest(id){const r=D.requests.find(x=>x.id===id);if(r)r.status='rejected';save();render();}
+
+function openAddTransaction(kid,type){
+  modal(type==='income'?'📥 הכנסה':'📤 הוצאה',`
+<div class="form-group"><label>סכום</label><input type="number" class="form-input" id="tr-amount" min="1"></div>
+<div class="form-group"><label>תיאור</label><input class="form-input" id="tr-desc" placeholder="${type==='income'?'דמי כיס, מתנה...':'ממתקים, משחק...'}"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn ${type==='income'?'btn-success':'btn-danger'}" onclick="saveTransaction('${kid}','${type}')">שמור</button></div>
+`,type==='income'?'success':'danger');
+}
+
+function saveTransaction(kid,type){
+  const amount=parseInt(document.getElementById('tr-amount').value)||0;
+  if(!amount)return alert('נא להזין סכום');
+  if(!D.wallet[kid])D.wallet[kid]={balance:0,transactions:[]};
+  D.wallet[kid].transactions.push({id:Date.now(),type,amount,desc:document.getElementById('tr-desc').value,date:new Date().toLocaleDateString('he-IL')});
+  D.wallet[kid].balance+=type==='income'?amount:-amount;
+  save();closeModal();render();
+}
+
+function openEditSteps(){
+  modal('🏃 עדכון צעדים',`
+<div style="margin-bottom:16px;color:var(--text-light)">הזן את הצעדים מאפליקציית הבריאות</div>
+${FAMILY.map(m=>`<div class="form-group"><label>${m.icon} ${m.name}</label><input type="number" class="form-input" id="steps-${m.id}" value="${D.steps?.[m.id]?.daily||0}" min="0"></div>`).join('')}
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveSteps()">שמור</button></div>
+`);
+}
+
+function saveSteps(){
+  FAMILY.forEach(m=>{
+    if(!D.steps[m.id])D.steps[m.id]={daily:0,goal:5000};
+    D.steps[m.id].daily=parseInt(document.getElementById('steps-'+m.id).value)||0;
   });
   save();closeModal();render();
 }
 
-function renderMember(){
-  const m=FAMILY.find(x=>x.id===member);
-  const sch=D.schedules?.[member]||{};
-  const myTasks=(D.tasks||[]).filter(t=>t.kid===member);
-  const myEvents=(D.events||[]).filter(e=>e.member===member);
-  const myWorkouts=(D.workouts||[]).filter(w=>w.member===member);
-  
-  return `<div class="header" style="padding-bottom:10px"><button onclick="member=null;render()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 14px;border-radius:8px;cursor:pointer">← חזרה</button></div>
-<div style="display:flex;align-items:center;gap:16px;padding:16px;background:white;border-radius:16px;margin-bottom:16px">
-<div class="member-${m.id}" style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem">${m.icon}</div>
-<div style="flex:1"><div style="font-size:1.2rem;font-weight:700">${m.name}</div><div style="color:var(--text-light)">${m.grade?m.grade==='גן'?'גן חובה':'כיתה '+m.grade:''}</div></div>
-${m.type==='child'?`<div style="text-align:center"><div style="font-size:1.2rem;font-weight:700;color:var(--success)">₪${D.money?.[m.id]||0}</div><div style="font-size:0.65rem;color:var(--text-light)">חיסכון</div></div>`:''}
-</div>
-
-<div class="tabs">${['schedule','tasks','events','workouts',m.type==='child'&&m.grade!=='גן'?'grades':null].filter(Boolean).map(t=>`<button class="tab ${mTab===t?'active':''}" onclick="setMTab('${t}')">${t==='schedule'?'📅 מערכת':t==='tasks'?'✅ משימות':t==='events'?'📋 אירועים':t==='workouts'?'🏃 אימונים':'📊 ציונים'}</button>`).join('')}</div>
-
-${mTab==='schedule'?`<div class="card"><div class="card-title" style="margin-bottom:12px">📅 מערכת שעות</div>
-<div style="overflow-x:auto"><table style="width:100%;min-width:500px;border-collapse:collapse;font-size:0.65rem">
-<thead><tr><th style="background:var(--primary);color:white;padding:6px;width:50px">שעה</th>${DAYS.map((d,i)=>`<th style="background:${i===6?'#94a3b8':'var(--primary)'};color:white;padding:6px">${d}</th>`).join('')}</tr></thead>
-<tbody>${TIMES.map(time=>`<tr><td style="background:#f1f5f9;padding:4px;font-weight:600;text-align:center">${time}</td>${[0,1,2,3,4,5,6].map(day=>{const l=(sch[day]||[]).find(x=>x.t===time);return `<td style="padding:3px;border:1px solid var(--border);text-align:center;cursor:pointer;${l?'background:rgba(102,126,234,0.15);font-weight:600':''}" onclick="editLesson('${member}',${day},'${time}')">${l?.s||''}</td>`;}).join('')}</tr>`).join('')}</tbody>
-</table></div></div>`:''}
-
-${mTab==='tasks'?`<div class="card"><div class="card-title" style="margin-bottom:12px">✅ המשימות שלי</div>${!myTasks.length?'<div class="empty" style="padding:20px"><span class="emoji">🎉</span>אין</div>':myTasks.map(t=>renderTask(t,D.tasks.indexOf(t))).join('')}</div>`:''}
-
-${mTab==='events'?`<div class="card"><div class="card-header"><div class="card-title">📋 האירועים שלי</div><button class="btn btn-small btn-primary" onclick="openAddEventFor('${m.id}')">+</button></div>${!myEvents.filter(e=>parseDate(e.date)>=new Date()).length?'<div class="empty" style="padding:20px"><span class="emoji">📭</span>אין</div>':myEvents.filter(e=>parseDate(e.date)>=new Date()).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,10).map(e=>{const t=EVENT_TYPES.find(x=>x.id===e.type)||EVENT_TYPES[0];return `<div class="item-row" style="border-right:3px solid ${t.color}"><div style="min-width:60px;font-size:0.75rem;color:var(--text-light)">${parseDate(e.date).toLocaleDateString('he-IL',{day:'numeric',month:'short'})}</div><div style="flex:1"><div style="font-weight:600">${t.icon} ${e.title}</div><div class="item-meta">${e.time||'כל היום'}</div></div><button class="item-delete" onclick="D.events.splice(${D.events.indexOf(e)},1);save();render()">🗑️</button></div>`;}).join('')}</div>`:''}
-
-${mTab==='workouts'?`<div class="card"><div class="card-header"><div class="card-title">🏃 האימונים שלי</div><button class="btn btn-small btn-primary" onclick="openAddWorkout()">+</button></div>${!myWorkouts.length?'<div class="empty" style="padding:20px">אין אימונים</div>':myWorkouts.map(w=>`<div class="item-row" style="border-right:3px solid #8b5cf6"><span style="font-size:1.3rem">🏃</span><div style="flex:1"><div style="font-weight:600">${w.activity}</div><div class="item-meta">${DAYS[w.day]} ${w.time}</div></div><button class="item-delete" onclick="D.workouts.splice(${D.workouts.indexOf(w)},1);save();render()">🗑️</button></div>`).join('')}</div>`:''}
-
-${mTab==='grades'&&m.type==='child'&&m.grade!=='גן'?renderMemberGrades(m):''}`;}
-
-function renderMemberGrades(m){
-  const grades=D.grades?.[m.id]||[];
-  return `<div class="card"><div class="card-header"><div class="card-title">📊 ציונים</div><button class="btn btn-small btn-primary" onclick="openAddGrade('${m.id}')">+</button></div>
-${grades.length?grades.slice().reverse().map(g=>`<div class="item-row" style="border-right:3px solid ${(g.grade||0)>=80?'var(--success)':(g.grade||0)>=60?'var(--warning)':'var(--danger)'}"><div style="flex:1"><div style="font-weight:600">${g.subject}</div><div class="item-meta">${g.date||''}</div></div><div style="font-size:1.3rem;font-weight:700;color:${(g.grade||0)>=80?'var(--success)':(g.grade||0)>=60?'var(--warning)':'var(--danger)'}">${g.grade||'-'}</div></div>`).join(''):'<div class="empty" style="padding:20px">אין</div>'}
-</div>`;
+function openEditGoals(){
+  modal('🎯 עריכת יעדים',`
+<div class="form-group"><label>יעד משפחתי</label><input type="number" class="form-input" id="goal-family" value="${D.familyStepGoal||50000}" step="1000"></div>
+<div class="divider"></div>
+${FAMILY.map(m=>`<div class="form-group"><label>${m.icon} ${m.name}</label><input type="number" class="form-input" id="goal-${m.id}" value="${D.steps?.[m.id]?.goal||5000}" step="500"></div>`).join('')}
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveGoals()">שמור</button></div>
+`,'warning');
 }
 
-function openAddEventFor(mid){openAddEvent();setTimeout(()=>{document.getElementById('e-member').value=mid;},100);}
+function saveGoals(){
+  D.familyStepGoal=parseInt(document.getElementById('goal-family').value)||50000;
+  FAMILY.forEach(m=>{
+    if(!D.steps[m.id])D.steps[m.id]={daily:0,goal:5000};
+    D.steps[m.id].goal=parseInt(document.getElementById('goal-'+m.id).value)||5000;
+  });
+  save();closeModal();render();
+}
+
+function openAddPrize(){
+  modal('🎁 פרס חדש',`
+<div class="form-group"><label>שם</label><input class="form-input" id="prize-name"></div>
+<div class="form-group"><label>אייקון</label><input class="form-input" id="prize-icon" value="🎁" maxlength="2"></div>
+<div class="form-group"><label>עלות (נקודות)</label><input type="number" class="form-input" id="prize-cost" value="50" min="1"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="savePrize()">הוסף</button></div>
+`);
+}
+
+function savePrize(){
+  const name=document.getElementById('prize-name').value.trim();
+  if(!name)return alert('נא להזין שם');
+  D.prizes.push({id:'p'+Date.now(),name,icon:document.getElementById('prize-icon').value||'🎁',cost:parseInt(document.getElementById('prize-cost').value)||50});
+  save();closeModal();render();
+}
+
+function openRedeemPrize(prizeId){
+  const p=D.prizes.find(x=>x.id===prizeId);
+  modal('🎁 מימוש פרס',`
+<div style="text-align:center;padding:20px"><div style="font-size:4rem">${p.icon}</div><div style="font-size:1.3rem;font-weight:700;margin:12px 0">${p.name}</div><div style="font-size:1.5rem;font-weight:700;color:var(--warning)">⭐ ${p.cost}</div></div>
+<div class="form-group"><label>מי מממש?</label><select class="form-select" id="redeem-who">${FAMILY.map(m=>`<option value="${m.id}">${m.icon} ${m.name} (${getTotalPoints(m.id)} נק')</option>`).join('')}</select></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-success" onclick="redeemPrize('${prizeId}')">ממש</button></div>
+`,'success');
+}
+
+function redeemPrize(prizeId){
+  const p=D.prizes.find(x=>x.id===prizeId);
+  const who=document.getElementById('redeem-who').value;
+  const pts=getTotalPoints(who);
+  if(pts<p.cost)return alert('אין מספיק נקודות!');
+  D.points[who]=(D.points[who]||0)-p.cost;
+  D.redeemedPrizes.push({prizeId,prizeName:p.name,member:who,date:new Date().toLocaleDateString('he-IL')});
+  save();closeModal();render();
+}
+
+function openAddCustomActivity(){
+  modal('🎯 פעילות מותאמת',`
+<div class="form-group"><label>שם הפעילות</label><input class="form-input" id="ca-name"></div>
+<div class="form-group"><label>אייקון</label><input class="form-input" id="ca-icon" value="⭐" maxlength="2"></div>
+<div class="form-group"><label>נקודות</label><input type="number" class="form-input" id="ca-pts" value="5" min="1"></div>
+<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="saveCustomActivity()">הוסף</button></div>
+`);
+}
+
+function saveCustomActivity(){
+  const name=document.getElementById('ca-name').value.trim();
+  if(!name)return alert('נא להזין שם');
+  if(!D.settings.customActivities)D.settings.customActivities=[];
+  D.settings.customActivities.push({id:'ca'+Date.now(),name,icon:document.getElementById('ca-icon').value||'⭐',points:parseInt(document.getElementById('ca-pts').value)||5});
+  save();closeModal();render();
+}
+
+function editPhone(mid){
+  const m=FAMILY.find(x=>x.id===mid);
+  modal('📱 '+m.name,`<div class="form-group"><label>מספר טלפון</label><input class="form-input" id="phone-val" type="tel" value="${D.phones?.[mid]||''}" placeholder="0501234567" dir="ltr"></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button><button class="btn btn-primary" onclick="savePhone('${mid}')">שמור</button></div>`);
+}
+
+function savePhone(mid){D.phones[mid]=document.getElementById('phone-val').value.replace(/[^0-9]/g,'');save();closeModal();render();}
+
+function editMeal(day,meal){
+  const k=day+'-'+meal;
+  const items=D.meals?.[k]||[];
+  let html=`<div style="margin-bottom:16px">${items.length?items.map((it,i)=>`<div class="item-row"><div style="flex:1;font-weight:600">${it.name}</div><button class="btn btn-small btn-danger" onclick="removeMealItem(${day},'${meal}',${i})">🗑️</button></div>`).join(''):'<div class="empty" style="padding:16px">ריק</div>'}</div><div class="divider"></div><div class="form-group"><label>הוסף מאכל</label><input class="form-input" id="meal-name" placeholder="חביתה, סלט..."></div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal();render()">סגור</button><button class="btn btn-primary" onclick="addMealItem(${day},'${meal}')">הוסף</button></div>`;
+  modal('🍽️ '+DAYS[day]+' - '+meal,html);
+}
+
+function addMealItem(day,meal){
+  const k=day+'-'+meal;
+  const name=document.getElementById('meal-name').value.trim();
+  if(!name)return alert('נא להזין מאכל');
+  if(!D.meals[k])D.meals[k]=[];
+  D.meals[k].push({name});
+  save();closeModal();setTimeout(()=>editMeal(day,meal),100);
+}
+
+function removeMealItem(day,meal,idx){const k=day+'-'+meal;D.meals[k].splice(idx,1);save();closeModal();setTimeout(()=>editMeal(day,meal),100);}
 
 function editLesson(mid,day,time){
   const sch=D.schedules?.[mid]?.[day]||[];
   const cur=sch.find(l=>l.t===time)?.s||'';
-  modal(`${DAYS[day]} ${time}`,`
-<div class="form-group"><label>שיעור/פעילות</label><input class="form-input" id="l-text" value="${cur}"></div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">${['🏀 כדורסל','⚽ כדורגל','🎾 טניס','🏃 הישרדות','💼 עבודה'].map(x=>`<button class="btn btn-small btn-outline" type="button" onclick="document.getElementById('l-text').value='${x}'">${x.split(' ')[0]}</button>`).join('')}</div>
-<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button>${cur?`<button class="btn btn-danger" onclick="deleteLesson('${mid}',${day},'${time}')">🗑️</button>`:''}<button class="btn btn-primary" onclick="saveLesson('${mid}',${day},'${time}')">שמור</button></div>`);
+  modal(DAYS[day]+' '+time,`<div class="form-group"><label>פעילות</label><input class="form-input" id="lesson-val" value="${cur}"></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">${['📚 שיעור','🏀 כדורסל','⚽ כדורגל','🎹 מוזיקה','💼 עבודה'].map(x=>`<button class="btn btn-small btn-outline" onclick="document.getElementById('lesson-val').value='${x}'">${x}</button>`).join('')}</div><div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ביטול</button>${cur?`<button class="btn btn-danger" onclick="deleteLesson('${mid}',${day},'${time}')">🗑️</button>`:''}<button class="btn btn-primary" onclick="saveLesson('${mid}',${day},'${time}')">שמור</button></div>`);
 }
 
 function saveLesson(mid,day,time){
-  const v=document.getElementById('l-text').value.trim();
-  if(!D.schedules)D.schedules={};
+  const v=document.getElementById('lesson-val').value.trim();
   if(!D.schedules[mid])D.schedules[mid]={};
   if(!D.schedules[mid][day])D.schedules[mid][day]=[];
   const idx=D.schedules[mid][day].findIndex(l=>l.t===time);
-  if(v){
-    if(idx>=0)D.schedules[mid][day][idx].s=v;
-    else{D.schedules[mid][day].push({t:time,s:v});D.schedules[mid][day].sort((a,b)=>a.t.localeCompare(b.t));}
-  }else if(idx>=0)D.schedules[mid][day].splice(idx,1);
+  if(v){if(idx>=0)D.schedules[mid][day][idx].s=v;else D.schedules[mid][day].push({t:time,s:v});}
+  else if(idx>=0)D.schedules[mid][day].splice(idx,1);
   save();closeModal();render();
 }
 
-function deleteLesson(mid,day,time){
-  if(D.schedules?.[mid]?.[day]){
-    const idx=D.schedules[mid][day].findIndex(l=>l.t===time);
-    if(idx>=0)D.schedules[mid][day].splice(idx,1);
-    save();
-  }
-  closeModal();render();
+function deleteLesson(mid,day,time){const idx=(D.schedules?.[mid]?.[day]||[]).findIndex(l=>l.t===time);if(idx>=0)D.schedules[mid][day].splice(idx,1);save();closeModal();render();}
+
+function showEmergency(){
+  modal('🚨 חירום',`<a href="tel:100" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;margin-bottom:10px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚔</span><div><div style="font-weight:700">משטרה</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">100</div></div></a><a href="tel:101" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;margin-bottom:10px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚑</span><div><div style="font-weight:700">מד״א</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">101</div></div></a><a href="tel:102" style="display:flex;align-items:center;gap:12px;padding:18px;background:#fee2e2;border-radius:14px;text-decoration:none;color:var(--text)"><span style="font-size:2rem">🚒</span><div><div style="font-weight:700">כיבוי</div><div style="font-size:1.5rem;color:var(--danger);font-weight:700">102</div></div></a>`,'danger');
 }
 
 updateBadge();
